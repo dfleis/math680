@@ -1,0 +1,230 @@
+---
+title: "Assignment 1"
+author: "David Fleischer -- 260396047"
+date: "Last Update: `r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+We wish to show that $\hat\beta = \left(\hat\beta_1,\, \hat\beta_{-1}^T\right)^T$ given by
+\begin{align*}
+  \hat\beta_{-1} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
+  \hat\beta_1 &= \bar Y - \bar x^T \hat\beta_{-1}
+\end{align*}
+
+is a global minimizer of the least squares problem
+\begin{equation*}
+  \hat\beta = \underset{\beta\in\mathbb R^p}{\text{arg min}}~ \lVert Y - X \beta \rVert^2_2.
+\end{equation*}
+
+### Solution 1
+
+Recall our definitions of $\tilde X$ and $\tilde Y$
+\begin{align*}
+  \tilde X &= X_{-1} - {\bf 1}_n \bar x^T \\
+  \tilde Y &= Y - {\bf 1}_n^T \bar Y 
+\end{align*}
+
+Then
+\begin{align*}
+  \hat\beta_{-1} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
+  &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - {\bf 1}_n\bar Y - \left(X_{-1} - {\bf 1}_n \bar x^T\right) \beta_{-1} \rVert^2_2 \\
+  &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X_{-1}\beta_{-1} - {\bf 1}_n  \left( \bar Y - \bar x^T \beta_{-1} \right) \rVert^2_2 \\
+  &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X_{-1}\beta_{-1} - {\bf 1}_n \beta_1 \rVert^2_2 \quad \text{(by definition of $\beta_1$ above)} \\ 
+  &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - \left[{\bf 1}_n,\, X_{-1} \right]\,\left[\beta_1,\,\beta_{-1}\right] \rVert^2_2 \\
+  &\equiv \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X \beta  \rVert^2_2 \\
+\end{align*}
+
+Therefore, if $\hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T \in \mathbb R^p$ and 
+\begin{equation*}
+  \hat\beta_1 = \bar Y - \bar x^T \hat\beta_{-1}
+\end{equation*}
+
+then $\hat\beta$ also solves the uncentered problem
+\begin{equation*}
+  \hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T = \underset{\beta\in\mathbb R^p}{\text{arg min}}~\lVert Y - X \beta \rVert^2_2
+\end{equation*}
+
+as desired.
+
+# Question 2
+
+Consider the (centered) ridge regression problem of estimating $\beta_*$ with the $\ell_2$ penalized least squares regression coefficients $\hat\beta^{(\lambda)} = \left(\hat\beta_1^{(\lambda)},\,\hat\beta_{-1}^{(\lambda)\,T} \right)^T$ defined by
+\begin{align*}
+  \hat\beta_{-1}^{(\lambda)} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~ \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert \beta \rVert^2_2  \\
+  \hat\beta_1^{(\lambda)} &= \bar Y - \bar x^T \hat\beta^{(\lambda)}_{-1}
+\end{align*}
+
+## (a)
+
+We define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
+\begin{align*}
+  f(\beta) &= \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert\beta\rVert^2_2 \\
+  &= \left( \tilde Y - \tilde X \beta \right)^T \left( \tilde Y - \tilde X \beta \right)^T + \lambda \beta^T \beta \\
+  &= \tilde Y^T \tilde Y - \tilde Y^T \tilde X \beta - \beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta \\
+  &\equiv \tilde Y^T \tilde Y - 2\beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta 
+\end{align*}
+
+Therefore, taking the gradient of our function $\nabla f(\beta)$ we find
+\begin{equation*}
+  \nabla f(\beta) = -2\tilde X^T \tilde Y + 2\tilde X^T \tilde X \beta + 2\lambda \beta
+\end{equation*}
+
+as desired.
+
+## (b)
+
+The second order gradient $\nabla^2 f(\beta)$ yields
+\begin{equation*}
+  \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1}
+\end{equation*}
+
+where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ is positive semi-definite and, with $\lambda > 0$, $2\lambda\mathbb I_{p-1} \in \mathbb S^{p - 1}_+$, i.e. $2\lambda\mathbb I_{p-1}$ is also positive semi-definite. Therefore, since a sum of positive semi-definite matrices is also positive semi-definite, we find
+\begin{equation*}
+\nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_+
+\end{equation*}
+
+and so $f$ must be strictly convex in $\beta$.
+
+## (c)
+
+Strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$ we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
+
+## (d)
+
+To write our function solving for the ridge coefficients we first note that setting $\nabla f(\beta) = 0$ yields
+\begin{equation*}
+  \hat\beta^{(\lambda)}_{-1} = \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y
+\end{equation*}
+
+where $\left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)$ is guaranteed to be nonsingular (for $\lambda \neq 0$) because it will have have full rank via the identity matrix. For the purpose of computational efficiency we make use of the singular value decomposition on $\tilde X$
+\begin{equation*}
+  \tilde X = U D V^T
+\end{equation*}
+
+for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal. Then
+\begin{align*}
+  \hat\beta^{(\lambda)}_{-1} &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \\
+  &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \tilde Y \\
+  &= \left(VD^TU^T UDV^T + \lambda V V^T\right)^{-1} VD^TU^T \tilde Y \\
+  &= \left(V\left(D^TD + \lambda \mathbb I_{p- 1} \right)V^T\right)^{-1} VD^TU^T \tilde Y \\
+  &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} V^T VD^TU^T \tilde Y \\
+  &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y 
+\end{align*}
+
+Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $\left\{ d_j^2 + \lambda\right\}^{p-1}_{j = 1}$ along the main diagonal, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ will also be diagonal with entries $\left\{ \frac{1}{d^2_j + \lambda}\right\}^{p-1}_{j = 1}$. We exploit this to avoid performing a matrix inversion in our code. To this end, see the function below.
+
+```{r}
+ridge_coef <- function(X, y, lam) {
+  ytilde <- y - mean(y)
+  xbar <- colMeans(X)
+  Xtilde <- sweep(X, 2, xbar)
+  
+  Xtilde_svd <- svd(Xtilde)
+  U <- Xtilde_svd$u
+  d <- Xtilde_svd$d
+  V <- Xtilde_svd$v
+  
+  Dstar <- diag(d/(d^2 + lam))
+  
+  b1 <- mean(y) - crossprod(xbar, b)
+  b <- V %*% (Dstar %*% crossprod(U, ytilde))
+  return (list(b1 = b1, b = b))
+}
+```
+
+Note the choice to use `V %*% (Dstar %*% crossprod(U, ytilde))` to compute the matrix product $V D^* U^T \tilde Y$ as opposed to the (perhaps more intuitive) `V %*% Dstar %*% t(U) %*% ytilde`. Such a choice can be justified via the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$)
+
+```{r}
+library(microbenchmark)
+
+#===== Large n case =====#
+set.seed(124)
+
+# set parameters
+n <- 1e3
+p <- 1e2
+lam <- 1
+
+# generate data
+X <- matrix(rnorm(n * p), nrow = n, ncol = p)
+beta <- rnorm(p)
+eps <- rnorm(n)
+y <- X %*% beta + eps
+
+ytilde <- y - mean(y)
+xbar <- colMeans(X)
+Xtilde <- sweep(X, 2, xbar)
+
+# compute decomposition
+Xtilde_svd <- svd(Xtilde)
+U <- Xtilde_svd$u
+d <- Xtilde_svd$d
+V <- Xtilde_svd$v
+Dstar <- diag(d/(d^2 + lam))
+  
+# define multiplication functions
+f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
+f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
+f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
+f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
+f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+
+# test speed
+microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
+```
+
+```{r}
+#===== Large p case =====#
+set.seed(124)
+
+# set parameters
+n <- 1e2
+p <- 1e3
+lam <- 1
+
+# generate data
+X <- matrix(rnorm(n * p), nrow = n, ncol = p)
+beta <- rnorm(p)
+eps <- rnorm(n)
+y <- X %*% beta + eps
+
+# define multiplication functions
+f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
+f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
+f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
+f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
+f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+
+# test speed
+microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
+```
+
+## (e)
+
+We take the expectation of $\hat\beta^{(\lambda)}$
+\begin{align*}
+  \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \mathbb E \left[ \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right] \\
+  &= \mathbb E \left[ \right] \\
+  &= \mathbb E \left[ \right]
+\end{align*}
+
+and variance
+\begin{align*}
+  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
+  &= \text{Var} \left( \right) \\
+  &= \text{Var} \left( \right)
+\end{align*}
+
+# Question 3
+
+# Question 4
+
+# Question 5
+
+# Question 6
