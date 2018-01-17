@@ -117,23 +117,37 @@ for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both
   &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y 
 \end{align*}
 
-Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $\left\{ d_j^2 + \lambda\right\}^{p-1}_{j = 1}$ along the main diagonal, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ will also be diagonal with entries $\left\{ \frac{1}{d^2_j + \lambda}\right\}^{p-1}_{j = 1}$. We exploit this to avoid performing a matrix inversion in our code. To this end, see the function below.
+Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $\left\{ d_j^2 + \lambda\right\}^{p-1}_{j = 1}$ along the main diagonal, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ will also be diagonal with entries $\left\{ \frac{1}{d^2_j + \lambda}\right\}^{p-1}_{j = 1}$. We exploit this to avoid performing a matrix inversion in our code. For brevity we let
+\begin{equation*}
+  D^* = \left(D^T D + \lambda I_{p - 1}\right)^{-1} D^T
+\end{equation*}
+
+so that
+\begin{equation*}
+  \hat\beta^{(\lambda)} = V D^* U^T \tilde Y
+\end{equation*}
+
+We present a function written in `R` performing such calculations below.
 
 ```{r}
 ridge_coef <- function(X, y, lam) {
-  ytilde <- y - mean(y)
-  xbar <- colMeans(X)
-  Xtilde <- sweep(X, 2, xbar)
+  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
   
+  ytilde <- y - mean(y) # center response
+  xbar <- colMeans(Xm1) # find predictor means
+  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
   U <- Xtilde_svd$u
   d <- Xtilde_svd$d
   V <- Xtilde_svd$v
   
+  # compute the inverse (D^T D + lambda I_{p-1})^{-1} D^T
   Dstar <- diag(d/(d^2 + lam))
   
-  b1 <- mean(y) - crossprod(xbar, b)
   b <- V %*% (Dstar %*% crossprod(U, ytilde))
+  b1 <- mean(y) - crossprod(xbar, b)
   return (list(b1 = b1, b = b))
 }
 ```
@@ -225,6 +239,273 @@ and variance
 
 # Question 4
 
+For this problem we first define some additional functions and set some global parameters which remain constant across (a)-(d)
+
+```{r}
+set.seed(124)
+# global parameters
+nsims <- 50
+lams <- 10^seq(-8, 8, 0.5)
+sigma_star <- sqrt(1/2)
+```
+
+## (a)
+
+```{r}
+# set parameters
+n <- 100
+p <- 50
+theta <- 0.5
+
+# generate data
+beta_star <- rnorm(p, 0, sigma_star)
+Z <- matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1) # indep. normal deviates
+SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
+C <- chol(SIGMA)
+X <- cbind(rep(1, n), Z %*% C) # correlated normal deviates
+
+# simulate noise and response
+sim <- replicate(nsims, {
+  eps <- rnorm(n, 0, sigma_star)
+  y <- X %*% beta_star + eps
+
+})
+```
+
+## (b)
+
+## (c)
+
+## (d)
+
+
+
 # Question 5
 
+## (a)
+
+Taking the gradient of our objective function $g$ with respect to coefficient vector $\beta$ yields
+\begin{align*}
+  \nabla_\beta g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
+  &= -\frac{1}{\sigma^2} \left( \tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta
+\end{align*}
+
+and the gradient of $g$ with respect to $\sigma^2$ yields
+\begin{align*}
+  \nabla_{\sigma^2} g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
+  &= \frac{n}{2\sigma^2} - \frac{1}{\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2
+\end{align*}
+
+## (b)
+
+## (c)
+
+## (d)
+
+## (e)
+
+## (f)
+
+
+
 # Question 6
+
+## (a)
+
+Consider our objective function
+\begin{equation*}
+  f(\beta) = \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta\rVert^2_2 + \frac{\lambda_2}{2} \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2
+\end{equation*}
+
+To show convexity we wish to show $\nabla^2 f(\beta) \in \mathbb S^{p-1}_+$. However, it's not immediately obvious how to take such a gradient with our fused sum terms $\left(b_j - \beta_{j-1}\right)^2$. One way to get around this is to define vector $B \in \mathbb R^{p-1}$ given by
+\begin{equation*}
+  B =
+  \begin{bmatrix}
+    \beta_2 - \beta_1 \\
+    \vdots \\
+    \beta_p - \beta_{p-1}
+  \end{bmatrix}
+\end{equation*}
+
+Then
+\begin{equation*}
+  \sum^p_{j = 2}\left(\beta_j - \beta_{j - 1}\right)^2 = B^T B 
+\end{equation*}
+
+In order to achieve our task of expressing the fused sum in terms of the vector $\beta$ we must next decompose $B$ into a product of $\beta$ and some matrix. To this end we define matrix $A \in \mathbb R^{(p-2)\times (p-1)}$ with entries -1 along the main diagonal and 1 along the upper diagonal, i.e.,
+\begin{equation*}
+  A = 
+  \begin{bmatrix}
+    -1 & 1 & 0 & \cdots & 0 & 0 \\
+    0 & -1 & 1 & \cdots & 0 & 0 \\
+    \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+    0 & 0 & 0 & \cdots & -1 & 1 
+  \end{bmatrix}
+\end{equation*}
+
+Then
+\begin{align*}
+  \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2 &= B^T B \\
+  &= \beta^T A^T A \beta \\
+  &\equiv \lVert A\beta\rVert^2_2
+\end{align*}
+
+Therefore, our objective function can be expressed as
+\begin{align*}
+  f(\beta) &= \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta \rVert^2_2 + \frac{\lambda_2}{2}\lVert A \beta \rVert^2_2 \\
+  &\equiv \frac{1}{2} \tilde Y^T \tilde Y - \beta^T \tilde X^T \tilde Y + \frac{1}{2} \beta^T \tilde X^T \tilde X \beta + \frac{\lambda_1}{2}\beta^T \beta + \frac{\lambda_2}{2}\beta^T A^T A \beta
+\end{align*}
+
+Hence
+\begin{equation*}
+  \nabla f(\beta) = -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta 
+\end{equation*}
+
+admitting the second order gradient
+\begin{equation*}
+  \nabla^2 f(\beta) = \tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A 
+\end{equation*}
+
+Recalling that a matrix multiplied with its transpose must always be positive semi-definite, we find $\tilde X^T X$ and $A^T A$ must be positive semi-definite. Thus, since $\lambda_1 > 0$, we find that our sum $\tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A = \nabla^2 f(\beta)$ is positive semi-definite, and so $f(\beta)$ must be strictly convex, as desired.
+
+## (b)
+
+We first solve for $\hat\beta^{(\lambda_1,\,\lambda_2)}_{-1}$ in (a) by setting $\nabla f(\beta) = 0$
+\begin{align*}
+  0 &= -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta \\
+  \tilde X^T \tilde Y &= \left( \tilde X^T \tilde X + \lambda_1 \mathbb I_{p - 1} + \lambda_2 A^T A \right) \beta \\
+  \implies \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} &= M \tilde X^T \tilde Y
+\end{align*}
+
+where we have set $M = \left( \tilde X^T \tilde X + \lambda_1 \mathbb I_{p - 1} + \lambda_2 A^T A \right)^{-1}$ for brevity. Therefore
+\begin{align*}
+  \mathbb E \left[ \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} \right] &= \mathbb E \left[M \tilde X^T \tilde Y \right] \\
+  &= M \tilde X^T \mathbb E \left[ \tilde Y \right] \\
+  &= M \tilde X^T \beta_{*,\,-1}
+\end{align*}
+
+and
+\begin{align*}
+  \text{Var}\left( \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} \right) &= \text{Var}\left( M \tilde X^T Y \right) \\
+  &= M \tilde X^T \text{Var} \left( \tilde Y \right) \tilde X M^T \\
+  &= \sigma^2_* M \tilde X^T \tilde X M^T
+\end{align*}
+
+as desired. We now perform our fused ridge simulation study to test the theoretical values with some empirical estimates. We first define our fused ridge coefficient estimation function (as well as functions permitting us to easily compute the theoretical means and variances of the fused ridge problem)
+```{r}
+fused_ridge_coef <- function(X, y, lam1, lam2) {
+  n <- nrow(X); p <- ncol(X)
+  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
+  
+  ytilde <- y - mean(y) # center response
+  xbar <- colMeans(Xm1) # find predictor means
+  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  I <- diag(p - 1)
+  UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
+  J <- -1 * cbind(diag(p - 2), rep(0, p - 2)) # diag (p - 2)*(p - 1) matrix
+  A <- J + UD
+  
+  M <- solve(crossprod(Xtilde) + lam1 * I + lam2 * crossprod(A))
+  b <- M %*% crossprod(Xtilde, y)
+  b0 <- mean(y) - crossprod(xbar, b)
+  return(list(b0 = b0, b = b))
+}
+fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
+  # omits intercept term b0
+  # returns theoretical means and variances for the fused ridge problem
+  n <- nrow(X); p <- ncol(X)
+  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
+  betam1 <- beta[-1] # remove intercept term
+  
+  xbar <- colMeans(Xm1) # find predictor means
+  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  I <- diag(p - 1)
+  UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
+  J <- -1 * cbind(diag(p - 2), rep(0, p - 2)) # diag (p - 2)*(p - 1) matrix
+  A <- J + UD
+  
+  M <- solve(crossprod(Xtilde) + lam1 * I + lam2 * crossprod(A))
+  b <- M %*% crossprod(Xtilde, (Xtilde %*% betam1))
+  
+  vcv <- matrix(0, nrow = p - 1, ncol = p - 1)
+  if (n > p) { # when n > p this matrix multiplication routine is quicker
+    vcv <- sigma^2 * M %*% tcrossprod(crossprod(Xtilde), M)
+  } else { # when p > n this matrix multiplication routine is quicker
+   vcv <- sigma^2 * tcrossprod(M, Xtilde) %*% tcrossprod(Xtilde, M)
+  }
+  
+  return (list(b = b, vcv = vcv))
+}
+```
+
+We now simulate some data to test our estimates:
+
+```{r}
+set.seed(124)
+
+# set parameters
+nsims <- 1e4
+n <- 1e2
+p <- 5
+lam1 <- 1
+lam2 <- 1
+sigma_star <- 1
+beta_star <- rnorm(p)
+
+# generate (fixed) design matrix
+X <- cbind(rep(1, n), matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1))
+
+# compute expected parameter values
+par_true <- fused_ridge_coef_params(X, lam1, lam2, beta_star, sigma_star)
+b_true <- as.vector(par_true$b)
+vcv_true <- par_true$vcv
+
+# simulate our fused ridge solution nsim times
+# outputs a matrix with rows corresponding to coefficients
+# and columns correspond to simulation number
+pt <- proc.time()
+b_hat <- replicate(nsims, { 
+  eps <- rnorm(n, 0, sigma_star) # generate noise
+  y <- X %*% beta_star + eps # generate response
+  
+  b_hat <- unlist(fused_ridge_coef(X, y, lam1, lam2))
+  return (b_hat)
+})
+proc.time() - pt
+
+vcv_hat <- var(t(b_hat[-1,])) # estimated variance of b1, ..., b_p estimates
+
+# print estimated fused ridge coefficients vs. expected values
+b <- rbind(rowMeans(b_hat)[-1], b_true)
+rownames(b) <- c("b_hat", "b_true")
+round(b, 4)
+
+# print absolute error between estimated and true fused ridge variances
+round(abs(vcv_true - vcv_hat), 4) 
+```
+
+As a case study, we may look at the simulations of $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ and compare it with it's theoretical distribution. Note that the estimates $\hat\beta^{(\lambda_1,\,\lambda_2)} = M\tilde X^T \tilde Y$ are normally distributed because they are a linear combination of $\tilde Y \sim \mathcal N(\tilde X\beta, \sigma^2)$ (when our noise terms $\epsilon \sim \mathcal N(0, \sigma^2)$). We visualize the histogram of the $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ simulations with its empirical and theoretical densities overlaid (dashed, solid), along with its expected value (vertical line) below.
+
+```{r, fig.align = 'center', fig.height = 4, fig.width = 5.5, echo = F}
+i <- 2
+
+hist(b_hat[i,], breaks = 50, freq = F, 
+     xlab = substitute(paste(hat(beta)[ix]), list(ix = i)),
+     main = substitute(paste("Histogram of ", hat(beta)[ix], " Simulations"), 
+     list(ix = i)))
+abline(v = b_true[i - 1], col = 'red', lwd = 2)
+
+x <- seq(min(b_hat[i,]), max(b_hat[i,]), length.out = 1e3)
+z <- dnorm(x, mean = b_true[i - 1], sd = sqrt(vcv_true[i - 1, i - 1]))
+lines(z ~ x, lwd = 2)
+lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
+```
+
+
+
+
+
+
+
