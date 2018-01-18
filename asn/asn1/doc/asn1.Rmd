@@ -9,45 +9,34 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# DOUBLE CHECK 2 (e) FOR WHEN p > n... noninvertible X^T X...
+
 # Question 1
 
-We wish to show that $\hat\beta = \left(\hat\beta_1,\, \hat\beta_{-1}^T\right)^T$ given by
-\begin{align*}
-  \hat\beta_{-1} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
-  \hat\beta_1 &= \bar Y - \bar x^T \hat\beta_{-1}
-\end{align*}
-
-is a global minimizer of the least squares problem
-\begin{equation*}
-  \hat\beta = \underset{\beta\in\mathbb R^p}{\text{arg min}}~ \lVert Y - X \beta \rVert^2_2.
-\end{equation*}
-
-### Solution 1
-
-Recall our definitions of $\tilde X$ and $\tilde Y$
+From our definitions of $\tilde X$ and $\tilde Y$
 \begin{align*}
   \tilde X &= X_{-1} - {\bf 1}_n \bar x^T \\
-  \tilde Y &= Y - {\bf 1}_n^T \bar Y 
+  \tilde Y &= Y - {\bf 1}_n^T \bar Y, 
 \end{align*}
 
-Then
+we find
 \begin{align*}
   \hat\beta_{-1} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
   &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - {\bf 1}_n\bar Y - \left(X_{-1} - {\bf 1}_n \bar x^T\right) \beta_{-1} \rVert^2_2 \\
   &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X_{-1}\beta_{-1} - {\bf 1}_n  \left( \bar Y - \bar x^T \beta_{-1} \right) \rVert^2_2 \\
   &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X_{-1}\beta_{-1} - {\bf 1}_n \beta_1 \rVert^2_2 \quad \text{(by definition of $\beta_1$ above)} \\ 
   &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - \left[{\bf 1}_n,\, X_{-1} \right]\,\left[\beta_1,\,\beta_{-1}\right] \rVert^2_2 \\
-  &\equiv \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X \beta  \rVert^2_2 \\
+  &\equiv \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~\lVert Y - X \beta  \rVert^2_2.
 \end{align*}
 
 Therefore, if $\hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T \in \mathbb R^p$ and 
 \begin{equation*}
-  \hat\beta_1 = \bar Y - \bar x^T \hat\beta_{-1}
+  \hat\beta_1 = \bar Y - \bar x^T \hat\beta_{-1},
 \end{equation*}
 
 then $\hat\beta$ also solves the uncentered problem
 \begin{equation*}
-  \hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T = \underset{\beta\in\mathbb R^p}{\text{arg min}}~\lVert Y - X \beta \rVert^2_2
+  \hat \beta \equiv \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T = \underset{\beta\in\mathbb R^p}{\text{arg min}}~\lVert Y - X \beta \rVert^2_2,
 \end{equation*}
 
 as desired.
@@ -57,7 +46,7 @@ as desired.
 Consider the (centered) ridge regression problem of estimating $\beta_*$ with the $\ell_2$ penalized least squares regression coefficients $\hat\beta^{(\lambda)} = \left(\hat\beta_1^{(\lambda)},\,\hat\beta_{-1}^{(\lambda)\,T} \right)^T$ defined by
 \begin{align*}
   \hat\beta_{-1}^{(\lambda)} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~ \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert \beta \rVert^2_2  \\
-  \hat\beta_1^{(\lambda)} &= \bar Y - \bar x^T \hat\beta^{(\lambda)}_{-1}
+  \hat\beta_1^{(\lambda)} &= \bar Y - \bar x^T \hat\beta^{(\lambda)}_{-1}.
 \end{align*}
 
 ## (a)
@@ -67,64 +56,64 @@ We define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
   f(\beta) &= \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert\beta\rVert^2_2 \\
   &= \left( \tilde Y - \tilde X \beta \right)^T \left( \tilde Y - \tilde X \beta \right)^T + \lambda \beta^T \beta \\
   &= \tilde Y^T \tilde Y - \tilde Y^T \tilde X \beta - \beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta \\
-  &\equiv \tilde Y^T \tilde Y - 2\beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta 
+  &= \tilde Y^T \tilde Y - 2\beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta.
 \end{align*}
 
 Therefore, taking the gradient of our function $\nabla f(\beta)$ we find
 \begin{equation*}
-  \nabla f(\beta) = -2\tilde X^T \tilde Y + 2\tilde X^T \tilde X \beta + 2\lambda \beta
+  \nabla f(\beta) = -2\tilde X^T \tilde Y + 2\tilde X^T \tilde X \beta + 2\lambda \beta,
 \end{equation*}
 
 as desired.
 
 ## (b)
 
-The second order gradient $\nabla^2 f(\beta)$ yields
+We find the Hessian $\nabla^2 f(\beta)$ to be
 \begin{equation*}
-  \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1}
+  \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1},
 \end{equation*}
 
-where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ is positive semi-definite and, with $\lambda > 0$, $2\lambda\mathbb I_{p-1} \in \mathbb S^{p - 1}_+$, i.e. $2\lambda\mathbb I_{p-1}$ is also positive semi-definite. Therefore, since a sum of positive semi-definite matrices is also positive semi-definite, we find
+where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ is positive semi-definite and, with $\lambda > 0$, our scaled identity matrix $2\lambda\mathbb I_{p - 1}$ is also positive semi-definite, $2\lambda\mathbb I_{p-1} \in \mathbb S^{p - 1}_+$. Therefore, since a sum of positive semi-definite matrices is also positive semi-definite, we find
 \begin{equation*}
-\nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_+
+\nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_+,
 \end{equation*}
 
 and so $f$ must be strictly convex in $\beta$.
 
 ## (c)
 
-Strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$ we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
+Strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
 
 ## (d)
 
-To write our function solving for the ridge coefficients we first note that setting $\nabla f(\beta) = 0$ yields
+To write our function computing the ridge coefficients we first note that setting $\nabla f(\beta) = 0$ yields
 \begin{equation*}
-  \hat\beta^{(\lambda)}_{-1} = \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y
+  \hat\beta^{(\lambda)}_{-1} = \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y.
 \end{equation*}
 
-where $\left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)$ is guaranteed to be nonsingular (for $\lambda \neq 0$) because it will have have full rank via the identity matrix. For the purpose of computational efficiency we make use of the singular value decomposition on $\tilde X$
+For the purpose of computational efficiency we make use of the singular value decomposition of $\tilde X$
 \begin{equation*}
-  \tilde X = U D V^T
+  \tilde X = U D V^T,
 \end{equation*}
 
-for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal. Then
+for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal. Hence,
 \begin{align*}
   \hat\beta^{(\lambda)}_{-1} &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \\
   &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \tilde Y \\
   &= \left(VD^TU^T UDV^T + \lambda V V^T\right)^{-1} VD^TU^T \tilde Y \\
   &= \left(V\left(D^TD + \lambda \mathbb I_{p- 1} \right)V^T\right)^{-1} VD^TU^T \tilde Y \\
   &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} V^T VD^TU^T \tilde Y \\
-  &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y 
+  &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y.
 \end{align*}
 
-Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $\left\{ d_j^2 + \lambda\right\}^{p-1}_{j = 1}$ along the main diagonal, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ will also be diagonal with entries $\left\{ \frac{1}{d^2_j + \lambda}\right\}^{p-1}_{j = 1}$. We exploit this to avoid performing a matrix inversion in our code. For brevity we let
+Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $d_j^2 + \lambda$, $j = 1, ..., p - 1$, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ must also be diagonal with entries $\left(d^2_j + \lambda\right)^{-1}$, $j = 1, ..., p - 1$. We exploit this to avoid performing a matrix inversion in our code. For brevity we let
 \begin{equation*}
-  D^* = \left(D^T D + \lambda I_{p - 1}\right)^{-1} D^T
+  D^* = \left(D^T D + \lambda I_{p - 1}\right)^{-1} D^T,
 \end{equation*}
 
 so that
 \begin{equation*}
-  \hat\beta^{(\lambda)} = V D^* U^T \tilde Y
+  \hat\beta^{(\lambda)} = V D^* U^T \tilde Y.
 \end{equation*}
 
 We present a function written in `R` performing such calculations below.
@@ -152,90 +141,168 @@ ridge_coef <- function(X, y, lam) {
 }
 ```
 
-Note the choice to use `V %*% (Dstar %*% crossprod(U, ytilde))` to compute the matrix product $V D^* U^T \tilde Y$ as opposed to the (perhaps more intuitive) `V %*% Dstar %*% t(U) %*% ytilde`. Such a choice can be justified via the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$)
-
-```{r}
-library(microbenchmark)
-
-#===== Large n case =====#
-set.seed(124)
-
-# set parameters
-n <- 1e3
-p <- 1e2
-lam <- 1
-
-# generate data
-X <- matrix(rnorm(n * p), nrow = n, ncol = p)
-beta <- rnorm(p)
-eps <- rnorm(n)
-y <- X %*% beta + eps
-
-ytilde <- y - mean(y)
-xbar <- colMeans(X)
-Xtilde <- sweep(X, 2, xbar)
-
-# compute decomposition
-Xtilde_svd <- svd(Xtilde)
-U <- Xtilde_svd$u
-d <- Xtilde_svd$d
-V <- Xtilde_svd$v
-Dstar <- diag(d/(d^2 + lam))
-  
-# define multiplication functions
-f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
-f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
-f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
-f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
-f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
-
-# test speed
-microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
-```
-
-```{r}
-#===== Large p case =====#
-set.seed(124)
-
-# set parameters
-n <- 1e2
-p <- 1e3
-lam <- 1
-
-# generate data
-X <- matrix(rnorm(n * p), nrow = n, ncol = p)
-beta <- rnorm(p)
-eps <- rnorm(n)
-y <- X %*% beta + eps
-
-# define multiplication functions
-f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
-f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
-f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
-f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
-f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
-
-# test speed
-microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
-```
+Note the choice to use `V %*% (Dstar %*% crossprod(U, ytilde))` to compute the matrix product $V D^* U^T \tilde Y$ as opposed to (the perhaps more intuitive) `V %*% Dstar %*% t(U) %*% ytilde`. Such a choice is empirically justified in an appendix. 
 
 ## (e)
 
-We take the expectation of $\hat\beta^{(\lambda)}$
+We first take the expectation of $\hat\beta^{(\lambda)}_{-1}$
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \mathbb E \left[ \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right] \\
-  &= \mathbb E \left[ \right] \\
-  &= \mathbb E \left[ \right]
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \mathbb E \left[ \tilde Y \right] \\
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
+  &= \left(\tilde X^T \tilde X + \lambda \tilde X^T \tilde X \left(\tilde X^T \tilde X\right)^{-1} \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
+  &= \left(\tilde X^T \tilde X \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right) \right)^{-1} \tilde X^T \tilde X \beta_{-1}.
 \end{align*}
 
-and variance
+Recall from elementary linear algebra that, if $A$ and $B$ are invertible matrices and if $AB$ is defined, then
+\begin{equation*}
+  \left(AB\right)^{-1} = B^{-1}A^{-1}.
+\end{equation*}
+
+Hence
+\begin{align*}
+  \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \left(\tilde X^T \tilde X \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right) \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
+  &=  \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right)^{-1} \left( \tilde X^T \tilde X \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
+  &= \left(\mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \beta_{-1},
+\end{align*}
+
+as desired. We next compute the variance of our centered ridge estimates
 \begin{align*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
-  &= \text{Var} \left( \right) \\
-  &= \text{Var} \left( \right)
+  &= \text{Var} \left(  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \left(\tilde X^T \tilde X\right)^{-1} \tilde X^T \tilde Y \right) \quad \text{(by the same argument as above)} \\
+  &= \text{Var} \left(  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \hat\beta^\text{OLS}_{-1} \right) \quad \text{(definition of $\hat\beta^\text{OLS}_{-1}$)} \\
+  &=  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left(\left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1}\right)^T \\
+    &= \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1},
 \end{align*}
 
+where the final line was achieved via the symmetry of $\mathbb I_{p - 1}$ and $\tilde X^T \tilde X$. Recall that if our response $Y \sim \mathcal N(X\beta, \sigma^2)$ then our ordinary least squares estimates $\hat\beta^\text{OLS}$ of $\beta$ have variance (conditional on $X$) 
+\begin{equation*}
+  \text{Var} \left(\hat\beta^\text{OLS}\right) = \sigma^2 \left(X^T X\right)^{-1}.
+\end{equation*}
+
+So, if $\hat\beta^\text{OLS}_{-1}$ are our (centered) OLS estimates of $\beta_{-1}$ for (centered) responses $\tilde Y \sim \mathcal N(\tilde X \beta_{-1}, \sigma^2_*)$ then
+\begin{equation*}
+  \text{Var} \left(\hat\beta^\text{OLS}_{-1}\right) = \sigma^2_* \left(\tilde X^T \tilde X\right)^{-1}.
+\end{equation*}
+
+Hence
+\begin{align*}
+  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \\
+  &= \sigma^2_* \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \left(\tilde X^T \tilde X \right)^{-1} \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1},
+\end{align*}
+
+as desired. For computational considerations[^1] we once again apply the SVD on $\tilde X$ as we had done before so that $\tilde X = U D V^T$. Then,
+\begin{align*}
+  \left(\tilde X^T \tilde X\right)^{-1} &= V \Delta V^T \\
+ \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right)^{-1} &= V \Delta^* V^T,
+\end{align*}
+
+[^1]: It turns out that the following method I proposed for speeding up the calculations are not very effective when $n >> p$ (in fact, it can be sometimes marginally slower), but very effective for $n \sim p$.
+
+for diagonal matrices $\Delta$ and $\Delta^*$ given by
+\begin{align*}
+  \Delta &=
+  \begin{bmatrix}
+    d_1^{-2} & & \\
+    & \ddots & \\
+    & & d_{p - 1}^{-2}
+  \end{bmatrix} \\
+  \Delta^* &=
+  \begin{bmatrix}
+    \left(1 + \frac{\lambda}{d^2_1}\right)^{-1} & & \\
+    & \ddots & \\
+    & & \left(1 + \frac{\lambda}{d^2_{p - 1}}\right)^{-1}
+  \end{bmatrix}.
+\end{align*}
+
+saving us a number of matrix inversions. Therefore, we can express our expectation by
+\begin{align*}
+  \mathbb E \left[ \hat \beta^{(\lambda)}_{-1} \right] &= \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X \right)^{-1} \right)^{-1} \beta_{-1} \\
+  &= V \Delta^* V^T \beta_{-1},
+\end{align*}
+
+and variance by
+\begin{align*}
+  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \sigma^2_* V \Delta^* V^T V \Delta V^T V \Delta^* V^T \\
+  &= \sigma^2_* V \Delta^* \Delta \Delta^* V^T \\
+  &= \sigma^2_* V \Delta^{**} V^T,
+\end{align*}
+
+where $\Delta^{**}$ is a $(p - 1)\times(p - 1)$ diagonal matrix with diagonal elements $\left(d_j + \frac{\lambda}{d_j}\right)^{-2}$, $j = 1, ..., p - 1$. We now wish to perform a simulation study to estimate our theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. For readability we first define functions computing the theoretical mean and variance according to our above expressions.
+```{r}
+ridge_coef_params <- function(X, lam, beta, sigma) {
+  n <- nrow(X); p <- ncol(p)
+  betam1 <- beta[-1] # remove intercept term
+  Xm1 <- X[,-1] # remove leading column of 1's in our design matrix
+  
+  xbar <- colMeans(Xm1) # find prector means
+  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  # compute SVD on the centered design matrix
+  Xtilde_svd <- svd(Xtilde)
+  d <- Xtilde_svd$d
+  V <- Xtilde_svd$v
+  
+  Delta_star <- diag(1/(1 + lam/d^2))
+  Delta_star2 <- diag(1/(d + lam/d)^2)
+  
+  b <- V %*% (Delta_star %*% crossprod(V, betam1))
+  vcv <- sigma^2 * V %*% tcrossprod(Delta_star2, V)
+  return (list(b = b, vcv = vcv))
+}
+```
+
+We may now perform our simulation.
+```{r}
+set.seed(124)
+
+# set parameters
+nsims <- 1e3
+n <- 1e2
+p <- 6
+lam <- 4
+beta_star <- 1:p
+sigma_star <- 1
+
+# generate fixed design matrix
+X <- cbind(1, matrix(rnorm(n * (p - 1)), nrow = n))
+
+# compute theoretical mean and variance
+par_true <- ridge_coef_params(X, lam, beta_star, sigma_star)
+b_true <- as.vector(par_true$b)
+vcv_true <- par_true$vcv
+
+# simulate ridge coefficients nsims times
+# outputs a matrix with rows corresponding to coefficients
+# and columns correspond to simulation number
+pt <- proc.time()
+b_hat <- replicate(nsims, {
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star)
+  return (as.vector(ridge_coef(X, y, lam)$b))
+})
+proc.time() - pt
+
+# estimate variance of b1, ..., b_p estimates
+vcv_hat <- var(t(b_hat)) 
+
+# print estimated fused ridge coefficients vs. expected values
+b <- rbind(rowMeans(b_hat), b_true)
+rownames(b) <- c("b_hat", "b_true")
+round(b, 4)
+
+# print absolute error between estimated and true fused ridge variances
+round(abs(vcv_true - vcv_hat), 4) 
+```
+
+We see that the empirical sample estimates are very close to their theoretical values, as expected.
+
 # Question 3
+
+```{r}
+ridge_cv <- function(X, y, lam.vec, K) {
+  
+}
+```
 
 # Question 4
 
@@ -243,6 +310,7 @@ For this problem we first define some additional functions and set some global p
 
 ```{r}
 set.seed(124)
+
 # global parameters
 nsims <- 50
 lams <- 10^seq(-8, 8, 0.5)
@@ -287,13 +355,13 @@ sim <- replicate(nsims, {
 Taking the gradient of our objective function $g$ with respect to coefficient vector $\beta$ yields
 \begin{align*}
   \nabla_\beta g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
-  &= -\frac{1}{\sigma^2} \left( \tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta
+  &= -\frac{1}{\sigma^2} \left( \tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta,
 \end{align*}
 
-and the gradient of $g$ with respect to $\sigma^2$ yields
+while the gradient of $g$ with respect to $\sigma^2$ is given by
 \begin{align*}
   \nabla_{\sigma^2} g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
-  &= \frac{n}{2\sigma^2} - \frac{1}{\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2
+  &= \frac{n}{2\sigma^2} - \frac{1}{\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2.
 \end{align*}
 
 ## (b)
@@ -361,7 +429,7 @@ Hence
   \nabla f(\beta) = -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta 
 \end{equation*}
 
-admitting the second order gradient
+admitting the Hessian
 \begin{equation*}
   \nabla^2 f(\beta) = \tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A 
 \end{equation*}
@@ -462,23 +530,21 @@ par_true <- fused_ridge_coef_params(X, lam1, lam2, beta_star, sigma_star)
 b_true <- as.vector(par_true$b)
 vcv_true <- par_true$vcv
 
-# simulate our fused ridge solution nsim times
+# simulate our fused ridge coefficients nsims times
 # outputs a matrix with rows corresponding to coefficients
 # and columns correspond to simulation number
 pt <- proc.time()
 b_hat <- replicate(nsims, { 
-  eps <- rnorm(n, 0, sigma_star) # generate noise
-  y <- X %*% beta_star + eps # generate response
-  
-  b_hat <- unlist(fused_ridge_coef(X, y, lam1, lam2))
-  return (b_hat)
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star) # generate response
+  return (as.vector(fused_ridge_coef(X, y, lam1, lam2)$b))
 })
 proc.time() - pt
 
-vcv_hat <- var(t(b_hat[-1,])) # estimated variance of b1, ..., b_p estimates
+# estimate variance of b2, ..., b_p estimates
+vcv_hat <- var(t(b_hat)) 
 
 # print estimated fused ridge coefficients vs. expected values
-b <- rbind(rowMeans(b_hat)[-1], b_true)
+b <- rbind(rowMeans(b_hat), b_true)
 rownames(b) <- c("b_hat", "b_true")
 round(b, 4)
 
@@ -504,8 +570,76 @@ lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
 ```
 
 
+\newpage
+# Appendix
 
+## Matrix Multiplication Timing
 
+Consider the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$).
 
+```{r}
+library(microbenchmark)
+
+#===== Large n case =====#
+set.seed(124)
+
+# set parameters
+n <- 1e3
+p <- 1e2
+lam <- 1
+
+# generate data
+X <- matrix(rnorm(n * p), nrow = n)
+beta <- rnorm(p)
+eps <- rnorm(n)
+y <- X %*% beta + eps
+
+ytilde <- y - mean(y)
+xbar <- colMeans(X)
+Xtilde <- sweep(X, 2, xbar)
+
+# compute decomposition
+Xtilde_svd <- svd(Xtilde)
+U <- Xtilde_svd$u
+d <- Xtilde_svd$d
+V <- Xtilde_svd$v
+Dstar <- diag(d/(d^2 + lam))
+  
+# define multiplication functions
+f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
+f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
+f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
+f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
+f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+
+# test speed
+microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
+```
+
+```{r}
+#===== Large p case =====#
+set.seed(124)
+
+# set parameters
+n <- 1e2
+p <- 1e3
+lam <- 1
+
+# generate data
+X <- matrix(rnorm(n * p), nrow = n)
+beta <- rnorm(p)
+eps <- rnorm(n)
+y <- X %*% beta + eps
+
+# define multiplication functions
+f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
+f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
+f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
+f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
+f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+
+# test speed
+microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
+```
 
 
