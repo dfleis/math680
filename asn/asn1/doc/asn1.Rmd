@@ -9,6 +9,8 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# DON'T FORGET TO UNCOMMENT Q4
+
 # Question 1
 
 From our definitions of $\tilde X$ and $\tilde Y$
@@ -148,7 +150,7 @@ ridge_coef <- function(X, y, lam) {
   # compute ridge coefficients
   b <- V %*% (Dstar %*% crossprod(U, ytilde)) # slopes
   b1 <- mean(y) - crossprod(xbar, b) # intercept
-  return (list(b1 = b1, b = b))
+  list(b1 = b1, b = b)
 }
 ```
 
@@ -205,7 +207,7 @@ ridge_coef_params <- function(X, lam, beta, sigma) {
     
     b <- solve(crossprod(Xtilde) + lam * I) %*% (crossprod(Xtilde) %*% betam1)
     vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv
-    return (list(b = b, vcv = vcv)) 
+    list(b = b, vcv = vcv)
     
   } else {
     # compute SVD on the centered design matrix
@@ -218,7 +220,7 @@ ridge_coef_params <- function(X, lam, beta, sigma) {
     
     b <- V %*% (Dstar %*% crossprod(V, betam1))
     vcv <- V %*% tcrossprod(Dstar2, V)
-    return (list(b = b, vcv = vcv))
+    list(b = b, vcv = vcv)
   }
 }
 ```
@@ -248,7 +250,7 @@ vcv_true <- par_true$vcv
 # and columns correspond to simulation number
 b_hat <- replicate(nsims, {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  return (as.vector(ridge_coef(X, y, lam)$b))
+  as.vector(ridge_coef(X, y, lam)$b)
 })
 
 # estimate variance of b1, ..., b_p estimates
@@ -276,13 +278,13 @@ ridge_fit <- function(X, y, lam) {
   yhat <- X %*% b # fit a response estimate given fitted coefficients
   res <- sum((y - yhat)^2) # find prediction error
   
-  return (list(X = X, y = y, lam = lam, coef = b, fit = yhat, res = res))
+  list(X = X, y = y, lam = lam, coef = b, fit = yhat, res = res)
 }
-
 ridge_cv_lam <- function(X, y, lam, K) {
   # Helper function for ridge_cv()
   # perform K-fold cross-validation on the ridge regression 
   # estimation problem over a single tuning parameter lam
+  n <- nrow(X)
   
   if (K > n) { 
     stop(paste0("K > ", n, "."))
@@ -292,16 +294,15 @@ ridge_cv_lam <- function(X, y, lam, K) {
   
   # groups to cross-validate over
   folds <- cut(1:nrow(X), breaks = K, labels = F)
-  train_grps <- lapply(1:K, function(i) which(!(1:K %in% i)))
-  # get indices of our training subsets
-  train_idxs <- lapply(train_grps, function(tgs) which(folds %in% tgs))
+  # get indices of training subset
+  train_idxs <- lapply(1:K, function(i) !(folds %in% i))
   
   cv_err <- sapply(train_idxs, function(tis) {
     # train our model
     train_fit <- ridge_fit(X[tis,], y[tis], lam)
     
     # find observations needed for testing fits
-    test_idx <- which(!((1:n) %in% tis))
+    test_idx <- !((1:n) %in% tis)
     
     # extract fitted coefficients
     b <- train_fit$coef
@@ -324,30 +325,45 @@ ridge_cv <- function(X, y, lam.vec, K) {
   # estimation problem over tuning parameters given in lam.vec
   n <- nrow(X); p <- ncol(X); L <- length(lam.vec)
   
-  cv.error <- vector(mode = "numeric", length = L)
-  for (i in 1:L) {
-    cv.error[i] <- ridge_cv_lam(X, y, lam.vec[i], K)  
-  }
+  cv.error <- sapply(1:L, function(i) ridge_cv_lam(X, y, lam.vec[i], K))
   
   # extract best tuning parameter and corresponding coefficient estimates
-  best.lam <- lam.vec[which(cv.error == min(cv.error))]
+  best.lam <- lam.vec[cv.error == min(cv.error)]
   best.fit <- ridge_fit(X, y, best.lam)
   b1 <- best.fit$coef[1]
   b <- best.fit$coef[-1]
   
-  return (list(b1 = b1, b = b, best.lam = best.lam, cv.error = cv.error))
+  list(b1 = b1, b = b, best.lam = best.lam, cv.error = cv.error)
 }
 ```
 
 # Question 4
 
-For this problem we first define some additional functions and set some global parameters which remain constant across (a)-(d)
+<!--
 
+For this problem we first set some global libraries/functions 
+```{r, message = F}
+library(doParallel)
+
+rmvn <- function(n, p, mu = 0, S = diag(p)) {
+  # generates n (potentially correlated) p-dimensional normal deviates
+  # given mean vector mu and variance-covariance matrix S
+  # NOTE: S must be a positive-semidefinite matrix
+  Z <- matrix(rnorm(n * p), nrow = n, ncol = p) # generate iid normal deviates
+  C <- chol(S)
+  mu + Z %*% C # compute our correlated deviates
+}
+loss1 <- function(beta, b) sum((b - beta)^2)
+loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2)
+```
+
+and global parameters which remain constant across (a)-(d)
 ```{r}
 set.seed(124)
 
 # global parameters
 nsims <- 50
+n <- 100
 lams <- 10^seq(-8, 8, 0.5)
 sigma_star <- sqrt(1/2)
 ```
@@ -356,32 +372,194 @@ sigma_star <- sqrt(1/2)
 
 ```{r}
 # set parameters
-n <- 100
 p <- 50
 theta <- 0.5
 
 # generate data
 beta_star <- rnorm(p, 0, sigma_star)
-Z <- matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1) # indep. normal deviates
 SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
-C <- chol(SIGMA)
-X <- cbind(rep(1, n), Z %*% C) # correlated normal deviates
+X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
-# simulate noise and response
-sim <- replicate(nsims, {
-  eps <- rnorm(n, 0, sigma_star)
-  y <- X %*% beta_star + eps
+# simulation
+pt <- proc.time()
+registerDoParallel(cores = 4)
 
-})
+sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star)  
+  
+  ols_fit <- ridge_fit(X, y, 0)
+  k5_fit <- ridge_cv(X, y, lam.vec = lams, K = 5)
+  k10_fit <- ridge_cv(X, y, lam.vec = lams, K = 10)
+  kn_fit <- ridge_cv(X, y, lam.vec = lams, K = n)
+  
+  coef_list <- list(OLS = ols_fit$coef, 
+                    k5  = c(k5_fit$b1, k5_fit$b), 
+                    k10 = c(k10_fit$b1, k10_fit$b),
+                    kn  = c(kn_fit$b1, kn_fit$b))
+  l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
+  l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
+  list(l1, l2)
+}
+
+sim_loss <- lapply(1:nrow(sim),
+                   function(i) sapply(sim[i,], function(s) s))
+names(sim_loss) <- c("Loss 1", "Loss 2")
+
+sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
+sim_se <- t(sapply(sim_loss, 
+                 function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
+
+proc.time() - pt
+
+# report results
+round(sim_means, 4)
+round(sim_se, 4)
 ```
 
 ## (b)
 
+```{r}
+# set parameters
+p <- 50
+theta <- 0.9
+
+# generate data
+beta_star <- rnorm(p, 0, sigma_star)
+SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
+X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
+
+# simulation
+pt <- proc.time()
+registerDoParallel(cores = 4)
+
+sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star)  
+  
+  ols_fit <- ridge_fit(X, y, 0)
+  k5_fit <- ridge_cv(X, y, lam.vec = lams, K = 5)
+  k10_fit <- ridge_cv(X, y, lam.vec = lams, K = 10)
+  kn_fit <- ridge_cv(X, y, lam.vec = lams, K = n)
+  
+  coef_list <- list(OLS = ols_fit$coef, 
+                    k5  = c(k5_fit$b1, k5_fit$b), 
+                    k10 = c(k10_fit$b1, k10_fit$b),
+                    kn  = c(kn_fit$b1, kn_fit$b))
+  l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
+  l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
+  list(l1, l2)
+}
+
+sim_loss <- lapply(1:nrow(sim),
+                   function(i) sapply(sim[i,], function(s) s))
+names(sim_loss) <- c("Loss 1", "Loss 2")
+
+sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
+sim_se <- t(sapply(sim_loss, 
+                 function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
+
+proc.time() - pt
+
+# report results
+round(sim_means, 4)
+round(sim_se, 4)
+```
+
 ## (c)
+
+```{r}
+# set parameters
+p <- 200
+theta <- 0.5
+
+# generate data
+beta_star <- rnorm(p, 0, sigma_star)
+SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
+X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
+
+# simulation
+pt <- proc.time()
+registerDoParallel(cores = 4)
+
+sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star)  
+  
+  ols_fit <- ridge_fit(X, y, 0)
+  k5_fit <- ridge_cv(X, y, lam.vec = lams, K = 5)
+  k10_fit <- ridge_cv(X, y, lam.vec = lams, K = 10)
+  kn_fit <- ridge_cv(X, y, lam.vec = lams, K = n)
+  
+  coef_list <- list(OLS = ols_fit$coef, 
+                    k5  = c(k5_fit$b1, k5_fit$b), 
+                    k10 = c(k10_fit$b1, k10_fit$b),
+                    kn  = c(kn_fit$b1, kn_fit$b))
+  l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
+  l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
+  list(l1, l2)
+}
+
+sim_loss <- lapply(1:nrow(sim),
+                   function(i) sapply(sim[i,], function(s) s))
+names(sim_loss) <- c("Loss 1", "Loss 2")
+
+sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
+sim_se <- t(sapply(sim_loss, 
+                 function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
+
+proc.time() - pt
+
+# report results
+round(sim_means, 4)
+round(sim_se, 4)
+```
 
 ## (d)
 
+```{r}
+# set parameters
+p <- 200
+theta <- 0.9
 
+# generate data
+beta_star <- rnorm(p, 0, sigma_star)
+SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
+X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
+
+# simulation
+pt <- proc.time()
+registerDoParallel(cores = 4)
+
+sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  y <- X %*% beta_star + rnorm(n, 0, sigma_star)  
+  
+  ols_fit <- ridge_fit(X, y, 0)
+  k5_fit <- ridge_cv(X, y, lam.vec = lams, K = 5)
+  k10_fit <- ridge_cv(X, y, lam.vec = lams, K = 10)
+  kn_fit <- ridge_cv(X, y, lam.vec = lams, K = n)
+  
+  coef_list <- list(OLS = ols_fit$coef, 
+                    k5  = c(k5_fit$b1, k5_fit$b), 
+                    k10 = c(k10_fit$b1, k10_fit$b),
+                    kn  = c(kn_fit$b1, kn_fit$b))
+  l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
+  l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
+  list(l1, l2)
+}
+
+sim_loss <- lapply(1:nrow(sim),
+                   function(i) sapply(sim[i,], function(s) s))
+names(sim_loss) <- c("Loss 1", "Loss 2")
+
+sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
+sim_se <- t(sapply(sim_loss, 
+                 function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
+proc.time() - pt
+
+# report results
+round(sim_means, 4)
+round(sim_se, 4)
+```
+
+-->
 
 # Question 5
 
@@ -390,22 +568,106 @@ sim <- replicate(nsims, {
 Taking the gradient of our objective function $g$ with respect to coefficient vector $\beta$ yields
 \begin{align*}
   \nabla_\beta g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
-  &= -\frac{1}{\sigma^2} \left( \tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta,
+  &= \frac{1}{\sigma^2} \left( -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta \right) + \lambda \beta,
 \end{align*}
 
 while the gradient of $g$ with respect to $\sigma^2$ is given by
 \begin{align*}
   \nabla_{\sigma^2} g(\beta,\sigma^2) &= \nabla_\beta \left( \frac{n}{2} \left(\log \sigma^2\right) + \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
-  &= \frac{n}{2\sigma^2} - \frac{1}{\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2.
+  &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2.
 \end{align*}
+
+as desired.
 
 ## (b)
 
 ## (c)
 
+Let $\bar\beta$ be a solution to our maximum likelihood ridge estimation problem such that, for $\lambda > 0$, we have
+\begin{equation*}
+  \tilde Y - \tilde X \bar \beta = 0.
+\end{equation*}
+
+Since $\bar\beta$ is a solution it must satisfy our first order condition
+\begin{equation*}
+ \nabla_\beta g(\beta,\sigma^2) = \frac{1}{\sigma^2} \left( -\tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta = 0 \iff \frac{1}{\sigma^2} \left( \tilde X^T \left( - \tilde Y + \tilde X \beta \right) \right) + \lambda \beta = 0.
+\end{equation*}
+
+Thus, for such a solution $\bar\beta$ and $\lambda > 0$,
+\begin{align*}
+  0 &= \frac{1}{\sigma^2} \left( \tilde X^T \left( -\tilde Y + \tilde X \bar\beta \right) \right) + \lambda \bar\beta \\
+  &= \frac{1}{\sigma^2} \left( \tilde X^T \left( -\tilde Y + \tilde Y \right) \right) + \lambda \bar\beta \\
+  &= \lambda \bar\beta \\
+  \iff \bar\beta &= 0.
+\end{align*}
+
+Similarly, using our second first order condition $\nabla_{\sigma^2} g(\beta,\sigma^2) = 0$, at $\beta = \bar\beta$,
+\begin{align*}
+  \nabla_{\sigma^2} g(\beta,\sigma^2) &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
+  &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \hat\beta \rVert^2_2 \\
+  &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde Y \rVert^2_2 \\
+  &= \frac{n}{2\sigma^2} = 0 
+\end{align*}  
+
+This conditions implies that either $n = 0$ or $\sigma^2 \to \infty$. Thus, no such global minimizer could exist.
+
 ## (d)
 
+Solving our first order conditions
+\begin{align*}
+\frac{1}{\sigma^2} \left( \tilde X^T \left( -\tilde Y + \tilde X \bar\beta \right) \right) + \lambda \bar\beta &= 0 \\
+\frac{n}{2\sigma^2} - \frac{1}{\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2 &= 0,
+\end{align*}
+
+we find the maximum likelihood estimate $\hat\beta^{\left(\lambda,\, ML\right)}$ to be
+\begin{equation*}
+  \hat\beta^{\left(\lambda,\, ML\right)} = \left(\tilde X^T \tilde X + \sigma^2 \lambda \mathbb I_{p - 1} \right)^{-1} \tilde X^T \tilde Y.
+\end{equation*}
+
+and the maximum likelihood estimate $\hat\sigma^{2\,\left(\lambda,\, ML\right)}$ to be
+\begin{equation*}
+  \hat\sigma^{2\,\left(\lambda,\, ML\right)} = \frac{2}{n} \lVert \tilde Y - \tilde X \hat\beta^{\left(\lambda,\, ML\right)} \rVert^2_2
+\end{equation*}
+
+To compute such estimates we may use the following algorithm: Consider some fixed data set $\mathcal D = \left\{X, Y\right\}$ and a fixed tuning parameter $\lambda$.
+
+(1) Center the data: Center each predictor by its mean $X \mapsto \tilde X$, center the response vector by its mean $Y \mapsto \tilde Y$.
+
+(2) Have some initial proposal for the estimate $\hat\sigma^{2\,\left(\lambda,\, ML\right)}_0 \in \mathbb R^+$.
+
+(3) Compute an initial proposal for $\hat\beta^{\left(\lambda,\, ML\right)}_0$ based on $\hat\sigma^{2\,\left(\lambda,\, ML\right)}_0$.
+
+(4) Update our variance estimate $\hat\sigma^{2\,\left(\lambda,\, ML\right)}_i$ using the previous estimate of $\hat\beta^{\left(\lambda,\, ML\right)}_{i - 1}$.
+
+(5) Update our coefficient estimate $\hat\beta^{\left(\lambda,\, ML\right)}$ using the new estimate of $\hat\sigma^{2\,\left(\lambda,\, ML\right)}_i$.
+
+(6) Repeat steps (5)-(6) until some convergence criteria is met, say $\lVert \hat\sigma^{2\,\left(\lambda,\, ML\right)}_i - \hat\sigma^{2\,\left(\lambda,\, ML\right)}_{i - 1} \rVert$ is small.
+
 ## (e)
+
+```{r}
+ridge_coef_mle <- function(X, y, lam, tol = 1e-5) {
+  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
+  
+  ytilde <- y - mean(y) # center response
+  xbar <- colMeans(Xm1) # find predictor means
+  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  # compute the SVD on the centered design matrix
+  Xtilde_svd <- svd(Xtilde)
+  U <- Xtilde_svd$u
+  d <- Xtilde_svd$d
+  V <- Xtilde_svd$v
+  
+  # compute the inverse (D^T D + sigma^2 * lambda I_{p-1})^{-1} D^T
+  #Dstar <- diag(d/(d^2 + lam))
+  
+  # # compute ridge coefficients
+  # b <- V %*% (Dstar %*% crossprod(U, ytilde)) # slopes
+  # b1 <- mean(y) - crossprod(xbar, b) # intercept
+  # list(b1 = b1, b = b)
+} 
+```
 
 ## (f)
 
