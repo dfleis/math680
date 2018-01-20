@@ -9,8 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# DOUBLE CHECK 2 (e) FOR WHEN p > n... noninvertible X^T X...
-
 # Question 1
 
 From our definitions of $\tilde X$ and $\tilde Y$
@@ -43,15 +41,9 @@ as desired.
 
 # Question 2
 
-Consider the (centered) ridge regression problem of estimating $\beta_*$ with the $\ell_2$ penalized least squares regression coefficients $\hat\beta^{(\lambda)} = \left(\hat\beta_1^{(\lambda)},\,\hat\beta_{-1}^{(\lambda)\,T} \right)^T$ defined by
-\begin{align*}
-  \hat\beta_{-1}^{(\lambda)} &= \underset{\beta\in\mathbb R^{p - 1}}{\text{arg min}}~ \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert \beta \rVert^2_2  \\
-  \hat\beta_1^{(\lambda)} &= \bar Y - \bar x^T \hat\beta^{(\lambda)}_{-1}.
-\end{align*}
-
 ## (a)
 
-We define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
+Define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
 \begin{align*}
   f(\beta) &= \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \lambda \lVert\beta\rVert^2_2 \\
   &= \left( \tilde Y - \tilde X \beta \right)^T \left( \tilde Y - \tilde X \beta \right)^T + \lambda \beta^T \beta \\
@@ -59,7 +51,7 @@ We define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
   &= \tilde Y^T \tilde Y - 2\beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta.
 \end{align*}
 
-Therefore, taking the gradient of our function $\nabla f(\beta)$ we find
+Therefore, by taking the gradient we find
 \begin{equation*}
   \nabla f(\beta) = -2\tilde X^T \tilde Y + 2\tilde X^T \tilde X \beta + 2\lambda \beta,
 \end{equation*}
@@ -68,25 +60,43 @@ as desired.
 
 ## (b)
 
-We find the Hessian $\nabla^2 f(\beta)$ to be
+The Hessian $\nabla^2 f(\beta)$ is given by
 \begin{equation*}
   \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1},
 \end{equation*}
 
-where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ is positive semi-definite and, with $\lambda > 0$, our scaled identity matrix $2\lambda\mathbb I_{p - 1}$ is also positive semi-definite, $2\lambda\mathbb I_{p-1} \in \mathbb S^{p - 1}_+$. Therefore, since a sum of positive semi-definite matrices is also positive semi-definite, we find
+where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ (positive semi-definite) and, for $\lambda > 0$, we have $2\lambda\mathbb I_{p - 1}\in \mathbb S^{p - 1}_{++}$ (positive definite). Therefore, for all nonzero vectors $v \in \mathbb R^{p - 1}$,
+\begin{align*}
+  v^T \nabla^2 f(\beta) v &= v^T \left( 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \right) v \\
+  &= 2 v^T \tilde X^T \tilde X v + 2\lambda v^T \mathbb I_{p - 1} v \\
+  &= 2 \left( \underbrace{\lVert \tilde X v \rVert^2_2}_{\geq 0} +  \underbrace{\lambda \lVert v \rVert^2_2}_{>0 \text{ when } \lambda > 0} \right) \\
+  &> 0.
+\end{align*}
+
+Hence,
 \begin{equation*}
-\nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_+,
+\nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_{++},
 \end{equation*}
 
 and so $f$ must be strictly convex in $\beta$.
 
 ## (c)
 
-Strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
+Suppose a strictly convex function $f$ is globally minimized at distinct points $x$ and $y$. By strict convexity
+\begin{equation*}
+  \forall\,t\in (0, 1) \quad f(tx + (1-t)y) < tf(x) + (1-t)f(y).
+\end{equation*}
+
+Since $f$ is minimized at both $x$ and $y$ we have $f(x) = f(y)$, so
+\begin{equation*}
+  f(tx + (1-t)y) < tf(x) + (1-t)f(x) = f(x).
+\end{equation*}
+
+However, this implies that the point $z = tx + (1 - t)y$ yields a value of $f$ even *smaller* than at $x$, contradicting our assumption that $x$ is a global minimizer. Therefore, strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
 
 ## (d)
 
-To write our function computing the ridge coefficients we first note that setting $\nabla f(\beta) = 0$ yields
+To write our function computing the ridge coefficients we first set $\nabla f(\beta) = 0$ 
 \begin{equation*}
   \hat\beta^{(\lambda)}_{-1} = \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y.
 \end{equation*}
@@ -96,7 +106,7 @@ For the purpose of computational efficiency we make use of the singular value de
   \tilde X = U D V^T,
 \end{equation*}
 
-for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal. Hence,
+for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal and zero elsewhere. Hence,
 \begin{align*}
   \hat\beta^{(\lambda)}_{-1} &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \\
   &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \tilde Y \\
@@ -106,7 +116,7 @@ for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both
   &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y.
 \end{align*}
 
-Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $d_j^2 + \lambda$, $j = 1, ..., p - 1$, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ must also be diagonal with entries $\left(d^2_j + \lambda\right)^{-1}$, $j = 1, ..., p - 1$. We exploit this to avoid performing a matrix inversion in our code. For brevity we let
+Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $d_j^2 + \lambda$, $j = 1, ..., p - 1$, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ must also be diagonal with entries $\left(d^2_j + \lambda\right)^{-1}$, $j = 1, ..., p - 1$. We exploit this to avoid performing a matrix inversion in our function. For brevity, let
 \begin{equation*}
   D^* = \left(D^T D + \lambda I_{p - 1}\right)^{-1} D^T,
 \end{equation*}
@@ -135,8 +145,9 @@ ridge_coef <- function(X, y, lam) {
   # compute the inverse (D^T D + lambda I_{p-1})^{-1} D^T
   Dstar <- diag(d/(d^2 + lam))
   
-  b <- V %*% (Dstar %*% crossprod(U, ytilde))
-  b1 <- mean(y) - crossprod(xbar, b)
+  # compute ridge coefficients
+  b <- V %*% (Dstar %*% crossprod(U, ytilde)) # slopes
+  b1 <- mean(y) - crossprod(xbar, b) # intercept
   return (list(b1 = b1, b = b))
 }
 ```
@@ -149,106 +160,66 @@ We first take the expectation of $\hat\beta^{(\lambda)}_{-1}$
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \mathbb E \left[ \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right] \\
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \mathbb E \left[ \tilde Y \right] \\
-  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
-  &= \left(\tilde X^T \tilde X + \lambda \tilde X^T \tilde X \left(\tilde X^T \tilde X\right)^{-1} \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
-  &= \left(\tilde X^T \tilde X \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right) \right)^{-1} \tilde X^T \tilde X \beta_{-1}.
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1} 
 \end{align*}
 
-Recall from elementary linear algebra that, if $A$ and $B$ are invertible matrices and if $AB$ is defined, then
-\begin{equation*}
-  \left(AB\right)^{-1} = B^{-1}A^{-1}.
-\end{equation*}
-
-Hence
+If $p >> n$ then using the SVD on $\tilde X$ may yield some speed improvements, that is, with $\tilde X = U D V^T$ as above, we find
 \begin{align*}
-  \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \left(\tilde X^T \tilde X \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right) \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
-  &=  \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right)^{-1} \left( \tilde X^T \tilde X \right)^{-1} \tilde X^T \tilde X \beta_{-1} \\
-  &= \left(\mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \beta_{-1},
+  \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1}  \\
+  &= V \left(D^T D + \lambda \mathbb I_{p - 1}\right)^{-1} D^T D V^T \beta_{-1} \\
+  &= V D^* V^T \beta_{-1}
 \end{align*}
 
-as desired. We next compute the variance of our centered ridge estimates
+where $D^*$ is a diagonal $\min \left(n, p - 1\right) \times \min \left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. [^1]
+
+[^1]: Benchmarks are provided in an appendix for the cases of large $n$, large $p$, and $n \approx p$.
+
+We next compute the variance of our centered ridge estimates
 \begin{align*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
-  &= \text{Var} \left(  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \left(\tilde X^T \tilde X\right)^{-1} \tilde X^T \tilde Y \right) \quad \text{(by the same argument as above)} \\
-  &= \text{Var} \left(  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \hat\beta^\text{OLS}_{-1} \right) \quad \text{(definition of $\hat\beta^\text{OLS}_{-1}$)} \\
-  &=  \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left(\left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1}\right)^T \\
-    &= \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1},
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \text{Var} \left( \tilde Y \right) \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \right)^T \\
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \text{Var} \left( \tilde Y \right) \tilde X \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \\
+  &= \sigma^2_* \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1}
 \end{align*}
 
-where the final line was achieved via the symmetry of $\mathbb I_{p - 1}$ and $\tilde X^T \tilde X$. Recall that if our response $Y \sim \mathcal N(X\beta, \sigma^2)$ then our ordinary least squares estimates $\hat\beta^\text{OLS}$ of $\beta$ have variance (conditional on $X$) 
+as desired. We once again may be interested in applying the SVD on $\tilde X$ as we had done before. Such a decomposition gives us a more concise solution
 \begin{equation*}
-  \text{Var} \left(\hat\beta^\text{OLS}\right) = \sigma^2 \left(X^T X\right)^{-1}.
+  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) = V D^{**} V^T
 \end{equation*}
 
-So, if $\hat\beta^\text{OLS}_{-1}$ are our (centered) OLS estimates of $\beta_{-1}$ for (centered) responses $\tilde Y \sim \mathcal N(\tilde X \beta_{-1}, \sigma^2_*)$ then
-\begin{equation*}
-  \text{Var} \left(\hat\beta^\text{OLS}_{-1}\right) = \sigma^2_* \left(\tilde X^T \tilde X\right)^{-1}.
-\end{equation*}
+where $D^{**}$ is a diagonal $\min\left(n, p - 1\right)\times\min\left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. 
 
-Hence
-\begin{align*}
-  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \text{Var} \left( \hat\beta^\text{OLS}_{-1} \right) \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \\
-  &= \sigma^2_* \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1} \left(\tilde X^T \tilde X \right)^{-1} \left( \mathbb I_{p - 1} + \lambda \left( \tilde X^T \tilde X \right)^{-1} \right)^{-1},
-\end{align*}
-
-as desired. For computational considerations[^1] we once again apply the SVD on $\tilde X$ as we had done before so that $\tilde X = U D V^T$. Then,
-\begin{align*}
-  \left(\tilde X^T \tilde X\right)^{-1} &= V \Delta V^T \\
- \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X\right)^{-1}\right)^{-1} &= V \Delta^* V^T,
-\end{align*}
-
-[^1]: It turns out that the following method I proposed for speeding up the calculations are not very effective when $n >> p$ (in fact, it can be sometimes marginally slower), but very effective for $n \sim p$.
-
-for diagonal matrices $\Delta$ and $\Delta^*$ given by
-\begin{align*}
-  \Delta &=
-  \begin{bmatrix}
-    d_1^{-2} & & \\
-    & \ddots & \\
-    & & d_{p - 1}^{-2}
-  \end{bmatrix} \\
-  \Delta^* &=
-  \begin{bmatrix}
-    \left(1 + \frac{\lambda}{d^2_1}\right)^{-1} & & \\
-    & \ddots & \\
-    & & \left(1 + \frac{\lambda}{d^2_{p - 1}}\right)^{-1}
-  \end{bmatrix}.
-\end{align*}
-
-saving us a number of matrix inversions. Therefore, we can express our expectation by
-\begin{align*}
-  \mathbb E \left[ \hat \beta^{(\lambda)}_{-1} \right] &= \left(\mathbb I_{p - 1} + \lambda \left(\tilde X^T \tilde X \right)^{-1} \right)^{-1} \beta_{-1} \\
-  &= V \Delta^* V^T \beta_{-1},
-\end{align*}
-
-and variance by
-\begin{align*}
-  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \sigma^2_* V \Delta^* V^T V \Delta V^T V \Delta^* V^T \\
-  &= \sigma^2_* V \Delta^* \Delta \Delta^* V^T \\
-  &= \sigma^2_* V \Delta^{**} V^T,
-\end{align*}
-
-where $\Delta^{**}$ is a $(p - 1)\times(p - 1)$ diagonal matrix with diagonal elements $\left(d_j + \frac{\lambda}{d_j}\right)^{-2}$, $j = 1, ..., p - 1$. We now wish to perform a simulation study to estimate our theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. For readability we first define functions computing the theoretical mean and variance according to our above expressions.
+We now wish to perform a simulation study to estimate our theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. For readability we first define functions computing the theoretical mean and variance according to our above expressions.
 ```{r}
 ridge_coef_params <- function(X, lam, beta, sigma) {
-  n <- nrow(X); p <- ncol(p)
+  n <- nrow(X); p <- ncol(X)
   betam1 <- beta[-1] # remove intercept term
   Xm1 <- X[,-1] # remove leading column of 1's in our design matrix
   
   xbar <- colMeans(Xm1) # find prector means
   Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
   
-  # compute SVD on the centered design matrix
-  Xtilde_svd <- svd(Xtilde)
-  d <- Xtilde_svd$d
-  V <- Xtilde_svd$v
+  if (n >= p) {
+    I <- diag(p - 1)
+    inv <- solve(crossprod(Xtilde) + lam * I)
+    
+    b <- solve(crossprod(Xtilde) + lam * I) %*% (crossprod(Xtilde) %*% betam1)
+    vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv
+    return (list(b = b, vcv = vcv)) 
+    
+  } else {
+    # compute SVD on the centered design matrix
+    Xtilde_svd <- svd(Xtilde)
+    d <- Xtilde_svd$d
+    V <- Xtilde_svd$v
   
-  Delta_star <- diag(1/(1 + lam/d^2))
-  Delta_star2 <- diag(1/(d + lam/d)^2)
-  
-  b <- V %*% (Delta_star %*% crossprod(V, betam1))
-  vcv <- sigma^2 * V %*% tcrossprod(Delta_star2, V)
-  return (list(b = b, vcv = vcv))
+    Dstar <- diag(d^2/(d^2 + lam))
+    Dstar2 <- diag(d^2/(d^2 + lam)^2)
+    
+    b <- V %*% (Dstar %*% crossprod(V, betam1))
+    vcv <- V %*% tcrossprod(Dstar2, V)
+    return (list(b = b, vcv = vcv))
+  }
 }
 ```
 
@@ -258,8 +229,8 @@ set.seed(124)
 
 # set parameters
 nsims <- 1e3
-n <- 1e2
-p <- 6
+n <- 25
+p <- 7
 lam <- 4
 beta_star <- 1:p
 sigma_star <- 1
@@ -275,12 +246,10 @@ vcv_true <- par_true$vcv
 # simulate ridge coefficients nsims times
 # outputs a matrix with rows corresponding to coefficients
 # and columns correspond to simulation number
-pt <- proc.time()
 b_hat <- replicate(nsims, {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
   return (as.vector(ridge_coef(X, y, lam)$b))
 })
-proc.time() - pt
 
 # estimate variance of b1, ..., b_p estimates
 vcv_hat <- var(t(b_hat)) 
@@ -298,9 +267,75 @@ We see that the empirical sample estimates are very close to their theoretical v
 
 # Question 3
 
+Prior to writing our cross-validation function we create some helper functions for the sake of readability
+```{r}
+ridge_fit <- function(X, y, lam) {
+  # fully fit a ridge regression model given predictors, response, and penalty
+  
+  b <- unlist(ridge_coef(X, y, lam)) # extract coefficient estimates
+  yhat <- X %*% b # fit a response estimate given fitted coefficients
+  res <- sum((y - yhat)^2) # find prediction error
+  
+  return (list(X = X, y = y, lam = lam, coef = b, fit = yhat, res = res))
+}
+
+ridge_cv_lam <- function(X, y, lam, K) {
+  # Helper function for ridge_cv()
+  # perform K-fold cross-validation on the ridge regression 
+  # estimation problem over a single tuning parameter lam
+  
+  if (K > n) { 
+    stop(paste0("K > ", n, "."))
+  } else if (K < 2) {
+    stop("K < 2.")
+  }
+  
+  # groups to cross-validate over
+  folds <- cut(1:nrow(X), breaks = K, labels = F)
+  train_grps <- lapply(1:K, function(i) which(!(1:K %in% i)))
+  # get indices of our training subsets
+  train_idxs <- lapply(train_grps, function(tgs) which(folds %in% tgs))
+  
+  cv_err <- sapply(train_idxs, function(tis) {
+    # train our model
+    train_fit <- ridge_fit(X[tis,], y[tis], lam)
+    
+    # find observations needed for testing fits
+    test_idx <- which(!((1:n) %in% tis))
+    
+    # extract fitted coefficients
+    b <- train_fit$coef
+    # fit data
+    yhat <- X[test_idx,] %*% b
+    # compute test error
+    sum((y[test_idx] - yhat)^2)
+  })
+  # weighted average (according to group size, some groups may have
+  # +/- 1 member depending on whether sizes divided unevenly) of
+  # cross validation error for a fixed lambda
+  sum((cv_err * table(folds)))/n
+}
+```
+
+Then, our cross-validation function is as follows:
 ```{r}
 ridge_cv <- function(X, y, lam.vec, K) {
+  # perform K-fold cross-validation on the ridge regression 
+  # estimation problem over tuning parameters given in lam.vec
+  n <- nrow(X); p <- ncol(X); L <- length(lam.vec)
   
+  cv.error <- vector(mode = "numeric", length = L)
+  for (i in 1:L) {
+    cv.error[i] <- ridge_cv_lam(X, y, lam.vec[i], K)  
+  }
+  
+  # extract best tuning parameter and corresponding coefficient estimates
+  best.lam <- lam.vec[which(cv.error == min(cv.error))]
+  best.fit <- ridge_fit(X, y, best.lam)
+  b1 <- best.fit$coef[1]
+  b <- best.fit$coef[-1]
+  
+  return (list(b1 = b1, b = b, best.lam = best.lam, cv.error = cv.error))
 }
 ```
 
@@ -573,15 +608,101 @@ lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
 \newpage
 # Appendix
 
+## Computing $\mathbb E \left[ \hat\beta^{(\lambda)} \right]$
+
+Consider the case of $n >> p$
+
+```{r}
+library(microbenchmark)
+set.seed(124)
+
+#===== Large n case =====#
+# parameters
+n <- 1e2
+p <- 1e1
+lam <- 1
+
+# generate data
+beta <- rnorm(p)
+X <- matrix(rnorm(n * p), nrow = n)
+I <- diag(p)
+
+# define functions 
+f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
+f2 <- function() {
+  X_svd <- svd(X)
+  V <- X_svd$v
+  d <- X_svd$d
+  Dstar <- diag(d^2/(d^2 + lam))
+  V %*% (Dstar %*% crossprod(V, beta))
+}
+
+# test speed
+microbenchmark(f1(), f2(), times = 1e3, unit = "us")
+```
+
+and the case for $p >> n$
+```{r}
+#===== Large p case =====#
+# parameters
+n <- 1e1
+p <- 1e2
+lam <- 1
+
+# generate data
+beta <- rnorm(p)
+X <- matrix(rnorm(n * p), nrow = n)
+I <- diag(p)
+
+# define functions 
+f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
+f2 <- function() {
+  X_svd <- svd(X)
+  V <- X_svd$v
+  d <- X_svd$d
+  Dstar <- diag(d^2/(d^2 + lam))
+  V %*% (Dstar %*% crossprod(V, beta))
+}
+
+# test speed
+microbenchmark(f1(), f2(), times = 1e3, unit = "us")
+```
+
+and $n \approx p$
+```{r}
+#===== n ~ p case =====#
+# parameters
+n <- 1e2
+p <- 1e2
+lam <- 1
+
+# generate data
+beta <- rnorm(p)
+X <- matrix(rnorm(n * p), nrow = n)
+I <- diag(p)
+
+# define functions 
+f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
+f2 <- function() {
+  X_svd <- svd(X)
+  V <- X_svd$v
+  d <- X_svd$d
+  Dstar <- diag(d^2/(d^2 + lam))
+  V %*% (Dstar %*% crossprod(V, beta))
+}
+
+# test speed
+microbenchmark(f1(), f2(), times = 1e3, unit = "us")
+```
+
+
 ## Matrix Multiplication Timing
 
 Consider the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$).
 
 ```{r}
-library(microbenchmark)
-
-#===== Large n case =====#
 set.seed(124)
+#===== Large n case =====#
 
 # set parameters
 n <- 1e3

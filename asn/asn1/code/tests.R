@@ -74,6 +74,31 @@ Z <- lam1 * I + lam2 * crossprod(A)
 qr.Q(qr(Z))
 
 
+library(microbenchmark)
+set.seed(124)
+n <- 10
+p <- 100
+lam <- 2.5
+beta <- rnorm(p)
+
+X <- matrix(rnorm(n * p), nrow = n)
+I <- diag(p)
+
+f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
+f2 <- function() {
+  X_svd <- svd(X)
+  V <- X_svd$v
+  d <- X_svd$d
+  Dstar <- diag(d^2/(d^2 + lam))
+  V %*% (Dstar %*% crossprod(V, beta))
+}
+
+
+pt <- proc.time()
+mb <- microbenchmark(f1(), f2(), f3(), times = 1e3, unit = "us")
+proc.time() - pt
+boxplot(mb, outline = F)
+mb
 
 
 
@@ -95,5 +120,29 @@ qr.Q(qr(Z))
 
 
 
+
+
+
+
+
+
+
+
+
+n <- 3
+p <- 6
+
+X <- matrix(rnorm(n * p), nrow = n)
+s <- svd(X)
+d <- s$d
+V <- s$v
+U <- s$u
+D <- cbind(diag(d), matrix(0, nrow = 3, ncol = 3))
+
+t(D) %*% D
+
+
+D <- diag(s$d)
+dim(t(D) %*% D)
 
 
