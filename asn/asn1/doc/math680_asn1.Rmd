@@ -1,5 +1,5 @@
 ---
-title: "Assignment 1"
+title: "MATH 680: Assignment 1"
 author: "David Fleischer -- 260396047"
 date: "Last Update: `r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
@@ -371,7 +371,7 @@ X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
 # simulation
 pt <- proc.time()
-registerDoParallel(cores = 4)
+registerDoParallel(cores = 3)
 
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
