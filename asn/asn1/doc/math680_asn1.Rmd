@@ -134,7 +134,8 @@ ridge_coef <- function(X, y, lam) {
   
   ytilde <- y - mean(y) # center response
   xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # center each col according to its mean
+  # center each predictor according to its mean
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) 
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
@@ -197,7 +198,8 @@ ridge_coef_params <- function(X, lam, beta, sigma) {
   Xm1 <- X[,-1] # remove leading column of 1's in our design matrix
   
   xbar <- colMeans(Xm1) # find prector means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  # center each predictor according to its mean
+  Xtilde <- sweep(Xm1, 2, xbar) 
   
   if (n >= p) {
     I <- diag(p - 1)
@@ -286,16 +288,14 @@ ridge_cv_lam <- function(X, y, lam, K) {
   # get indices of training subset
   train_idxs <- lapply(1:K, function(i) !(folds %in% i))
   
-  cv_err <- sapply(train_idxs, function(tis) {
+  cv_err <- sapply(train_idxs, function(tr_idx) {
     # train our model, extract fitted coefficients
-    b_train <- unlist(ridge_coef(X[tis,], y[tis], lam))
+    b_train <- unlist(ridge_coef(X[tr_idx,], y[tr_idx], lam))
     
-    # find observations needed for testing fits
-    test_idx <- !((1:n) %in% tis)
-    # fit data
-    yhat <- X[test_idx,] %*% b_train
+    # fit testing data
+    yhat <- X[!tr_idx,] %*% b_train
     # compute test error
-    sum((y[test_idx] - yhat)^2)
+    sum((y[!tr_idx] - yhat)^2)
   })
   # weighted average (according to group size, some groups may have
   # +/- 1 member depending on whether sizes divided unevenly) of
@@ -346,8 +346,8 @@ and global parameters which remain constant across (a)-(d)
 set.seed(124)
 
 # global parameters
-nsims <- 10
-n <- 10
+nsims <- 3
+n <- 100
 Ks <- c(5, 10, n)
 lams <- 10^seq(-8, 8, 0.5)
 sigma_star <- sqrt(1/2)
@@ -371,7 +371,7 @@ X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
 # simulation
 pt <- proc.time()
-registerDoParallel(cores = 3)
+registerDoParallel(cores = 4)
 
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
