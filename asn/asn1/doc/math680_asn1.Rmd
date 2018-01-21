@@ -9,7 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# To do... Run the full Q4
 # check what to do for the OLS/lambda = 0 case for p > n (Q4)
 # remove longwinded answers (expected values/variance estimates... no need to use SVD)
 
@@ -406,7 +405,7 @@ and global parameters which remain constant across (a)-(d)
 set.seed(124)
 
 # global parameters
-nsims <- 3
+nsims <- 50
 n <- 100
 Ks <- c(5, 10, n)
 lams <- 10^seq(-8, 8, 0.5)
@@ -419,7 +418,7 @@ names(coef_list) <- c("OLS", "K5", "K10", "Kn")
 
 ## (a)
 
-```{r}
+```{r, cache = T}
 # set parameters
 p <- 50
 theta <- 0.5
@@ -465,7 +464,7 @@ round(sim_se, 4)
 
 ## (b)
 
-```{r}
+```{r, cache = T}
 # set parameters
 p <- 50
 theta <- 0.9
@@ -511,7 +510,7 @@ round(sim_se, 4)
 
 ## (c)
 
-```{r}
+```{r, cache = T}
 # set parameters
 p <- 200
 theta <- 0.5
@@ -557,7 +556,7 @@ round(sim_se, 4)
 
 ## (d)
 
-```{r}
+```{r, cache = T}
 # set parameters
 p <- 200
 theta <- 0.9
