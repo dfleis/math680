@@ -10,7 +10,7 @@ ridge_coef <- function(X, y, lam) {
   
   ytilde <- y - mean(y) # center response
   xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # center each predictor according to its mean
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
@@ -56,15 +56,6 @@ ridge_coef_params <- function(X, lam, beta, sigma) {
     list(b = b, vcv = vcv)
   }
 }
-ridge_fit <- function(X, y, lam) {
-  # fully fit a ridge regression model given predictors, response, and penalty
-  
-  b <- unlist(ridge_coef(X, y, lam)) # extract coefficient estimates
-  yhat <- X %*% b # fit a response estimate given fitted coefficients
-  res <- sum((y - yhat)^2) # find prediction error
-  
-  list(X = X, y = y, lam = lam, coef = b, fit = yhat, res = res)
-}
 
 #===== Q3 =====#
 ridge_cv_lam <- function(X, y, lam, K) {
@@ -80,21 +71,18 @@ ridge_cv_lam <- function(X, y, lam, K) {
   }
   
   # groups to cross-validate over
-  folds <- cut(1:nrow(X), breaks = K, labels = F)
+  folds <- cut(1:n, breaks = K, labels = F)
   # get indices of training subset
   train_idxs <- lapply(1:K, function(i) !(folds %in% i))
   
   cv_err <- sapply(train_idxs, function(tis) {
-    # train our model
-    train_fit <- ridge_fit(X[tis,], y[tis], lam)
+    # train our model, extract fitted coefficients
+    b_train <- unlist(ridge_coef(X[tis,], y[tis], lam))
     
     # find observations needed for testing fits
     test_idx <- !((1:n) %in% tis)
-    
-    # extract fitted coefficients
-    b <- train_fit$coef
     # fit data
-    yhat <- X[test_idx,] %*% b
+    yhat <- X[test_idx,] %*% b_train
     # compute test error
     sum((y[test_idx] - yhat)^2)
   })
@@ -108,13 +96,13 @@ ridge_cv <- function(X, y, lam.vec, K) {
   # estimation problem over tuning parameters given in lam.vec
   n <- nrow(X); p <- ncol(X); L <- length(lam.vec)
   
-  cv.error <- sapply(1:L, function(i) ridge_cv_lam(X, y, lam.vec[i], K))
+  cv.error <- sapply(lam.vec, function(l) ridge_cv_lam(X, y, l, K))
   
   # extract best tuning parameter and corresponding coefficient estimates
   best.lam <- lam.vec[cv.error == min(cv.error)]
-  best.fit <- ridge_fit(X, y, best.lam)
-  b1 <- best.fit$coef[1]
-  b <- best.fit$coef[-1]
+  best.fit <- ridge_coef(X, y, best.lam)
+  b1 <- best.fit$b1
+  b <- best.fit$b
   
   list(b1 = b1, b = b, best.lam = best.lam, cv.error = cv.error)
 }
