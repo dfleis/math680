@@ -9,6 +9,10 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# To do... Run the full Q4
+# check what to do for the OLS/lambda = 0 case for p > n (Q4)
+# remove longwinded answers (expected values/variance estimates... no need to use SVD)
+
 # Question 1
 
 From our definitions of $\tilde X$ and $\tilde Y$
@@ -153,7 +157,67 @@ ridge_coef <- function(X, y, lam) {
 }
 ```
 
-Note the choice to use `V %*% (Dstar %*% crossprod(U, ytilde))` to compute the matrix product $V D^* U^T \tilde Y$ as opposed to (the perhaps more intuitive) `V %*% Dstar %*% t(U) %*% ytilde`. Such a choice is empirically justified in an appendix. 
+It turns out the following implementation will be considerably quicker
+```{r}
+scale_faster <- function(x,
+                       center = TRUE,
+                       scale = TRUE,
+                       add_attr = TRUE,
+                       rows = NULL,
+                       cols = NULL) {
+  # adapted from
+  # https://www.r-bloggers.com/a-faster-scale-function/
+  if (!is.null(rows) && !is.null(cols)) {
+    x <- x[rows, cols, drop = FALSE]
+  } else if (!is.null(rows)) {
+    x <- x[rows, , drop = FALSE]
+  } else if (!is.null(cols)) {
+    x <- x[, cols, drop = FALSE]
+  }
+  # Get the column means
+  cm = colMeans(x, na.rm = TRUE)
+  # Get the column sd
+  if (scale) {
+    csd = colSds(x, center = cm)
+  } else {
+    # just divide by 1 if not
+    csd = rep(1, length = length(cm))
+  }
+  if (!center) {
+    # just subtract 0
+    cm = rep(0, length = length(cm))
+  }
+  x = t( (t(x) - cm) / csd )
+  if (add_attr) {
+    if (center) {
+      attr(x, "scaled:center") <- cm
+    }
+    if (scale) {
+      attr(x, "scaled:scale") <- csd
+    }
+  }
+  return(x)
+}
+
+ridge_coef_faster <- function(X, y, lam) {
+  # Commented-out scaling parameters represent the transformations
+  # used to make the output identical to that of 
+  # coef(MASS::lm.ridge(X, y, lam))
+  
+  Xm1 <- X[,-1]
+  n <- nrow(X); ybar <- mean(y); #sqrt_sc <- sqrt(n/(n - 1))
+  #Xtilde <- scale_faster(Xm1) * sqrt_sc
+  Xtilde <- scale_faster(Xm1, scale = F)
+  ytilde <- y - ybar
+  
+  b <- chol2inv(chol(crossprod(Xtilde) + lam * diag(ncol(Xm1)))) %*% 
+    crossprod(Xtilde, ytilde) #* 
+    #sqrt_sc * 1/attr(Xtilde, "scaled:scale")
+
+  b1 <- ybar - sum(attr(Xtilde, "scaled:center") * b)
+  list(b1 = b1, b = b)
+}
+```
 
 ## (e)
 
@@ -171,11 +235,7 @@ If $p >> n$ then using the SVD on $\tilde X$ may yield some speed improvements, 
   &= V D^* V^T \beta_{-1}
 \end{align*}
 
-where $D^*$ is a diagonal $\min \left(n, p - 1\right) \times \min \left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. [^1]
-
-[^1]: Benchmarks are provided in an appendix for the cases of large $n$, large $p$, and $n \approx p$.
-
-We next compute the variance of our centered ridge estimates
+where $D^*$ is a diagonal $\min \left(n, p - 1\right) \times \min \left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. We next compute the variance of our centered ridge estimates
 \begin{align*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \text{Var} \left( \tilde Y \right) \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \right)^T \\
@@ -250,7 +310,7 @@ vcv_true <- par_true$vcv
 # and columns correspond to simulation number
 b_hat <- replicate(nsims, {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  as.vector(ridge_coef(X, y, lam)$b)
+  as.vector(ridge_coef_faster(X, y, lam)$b)
 })
 
 # estimate variance of b1, ..., b_p estimates
@@ -290,7 +350,7 @@ ridge_cv_lam <- function(X, y, lam, K) {
   
   cv_err <- sapply(train_idxs, function(tr_idx) {
     # train our model, extract fitted coefficients
-    b_train <- unlist(ridge_coef(X[tr_idx,], y[tr_idx], lam))
+    b_train <- unlist(ridge_coef_faster(X[tr_idx,], y[tr_idx], lam))
     
     # fit testing data
     yhat <- X[!tr_idx,] %*% b_train
@@ -315,7 +375,7 @@ ridge_cv <- function(X, y, lam.vec, K) {
   
   # extract best tuning parameter and corresponding coefficient estimates
   best.lam <- lam.vec[cv.error == min(cv.error)]
-  best.fit <- ridge_coef(X, y, best.lam)
+  best.fit <- ridge_coef_faster(X, y, best.lam)
   b1 <- best.fit$b1
   b <- best.fit$b
   
@@ -337,8 +397,8 @@ rmvn <- function(n, p, mu = 0, S = diag(p)) {
   C <- chol(S)
   mu + Z %*% C # compute our correlated deviates
 }
-loss1 <- function(beta, b) sum((b - beta)^2)
-loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2)
+loss1 <- function(beta, b) sum((b - beta)^2, na.rm = T)
+loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2, na.rm = T)
 ```
 
 and global parameters which remain constant across (a)-(d)
@@ -375,10 +435,12 @@ registerDoParallel(cores = 4)
 
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-
-  ols_fit <- ridge_coef(X, y, 0)
+  
+  # compute OLS estimates (lambda = 0)
+  ols_fit <- ridge_coef_faster(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-
+  
+  # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
@@ -420,9 +482,11 @@ registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
 
-  ols_fit <- ridge_coef(X, y, 0)
+  # compute OLS estimates (lambda = 0)  
+  ols_fit <- ridge_coef_faster(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
 
+  # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
@@ -464,9 +528,11 @@ registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
 
+  # compute OLS estimates (lambda = 0)  
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
 
+  # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
@@ -507,10 +573,12 @@ registerDoParallel(cores = 4)
 
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-
+  
+  # compute OLS estimates (lambda = 0)  
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
 
+  # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
@@ -532,7 +600,6 @@ proc.time() - pt
 round(sim_means, 4)
 round(sim_se, 4)
 ```
-
 
 # Question 5
 
@@ -861,7 +928,7 @@ fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
    vcv <- sigma^2 * tcrossprod(M, Xtilde) %*% tcrossprod(Xtilde, M)
   }
   
-  return (list(b = b, vcv = vcv))
+  list(b = b, vcv = vcv)
 }
 ```
 
@@ -893,7 +960,7 @@ vcv_true <- par_true$vcv
 pt <- proc.time()
 b_hat <- replicate(nsims, { 
   y <- X %*% beta_star + rnorm(n, 0, sigma_star) # generate response
-  return (as.vector(fused_ridge_coef(X, y, lam1, lam2)$b))
+  as.vector(fused_ridge_coef(X, y, lam1, lam2)$b)
 })
 proc.time() - pt
 
@@ -927,162 +994,162 @@ lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
 ```
 
 
-\newpage
-# Appendix
+<!-- \newpage -->
+<!-- # Appendix -->
 
-## Computing $\mathbb E \left[ \hat\beta^{(\lambda)} \right]$
+<!-- ## Computing $\mathbb E \left[ \hat\beta^{(\lambda)} \right]$ -->
 
-Consider the case of $n >> p$
+<!-- Consider the case of $n >> p$ -->
 
-```{r}
-library(microbenchmark)
-set.seed(124)
+<!-- ```{r} -->
+<!-- library(microbenchmark) -->
+<!-- set.seed(124) -->
 
-#===== Large n case =====#
-# parameters
-n <- 1e2
-p <- 1e1
-lam <- 1
+<!-- #===== Large n case =====# -->
+<!-- # parameters -->
+<!-- n <- 1e2 -->
+<!-- p <- 1e1 -->
+<!-- lam <- 1 -->
 
-# generate data
-beta <- rnorm(p)
-X <- matrix(rnorm(n * p), nrow = n)
-I <- diag(p)
+<!-- # generate data -->
+<!-- beta <- rnorm(p) -->
+<!-- X <- matrix(rnorm(n * p), nrow = n) -->
+<!-- I <- diag(p) -->
 
-# define functions 
-f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
-f2 <- function() {
-  X_svd <- svd(X)
-  V <- X_svd$v
-  d <- X_svd$d
-  Dstar <- diag(d^2/(d^2 + lam))
-  V %*% (Dstar %*% crossprod(V, beta))
-}
+<!-- # define functions  -->
+<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
+<!-- f2 <- function() { -->
+<!--   X_svd <- svd(X) -->
+<!--   V <- X_svd$v -->
+<!--   d <- X_svd$d -->
+<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
+<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
+<!-- } -->
 
-# test speed
-microbenchmark(f1(), f2(), times = 1e3, unit = "us")
-```
+<!-- # test speed -->
+<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
+<!-- ``` -->
 
-and the case for $p >> n$
-```{r}
-#===== Large p case =====#
-# parameters
-n <- 1e1
-p <- 1e2
-lam <- 1
+<!-- and the case for $p >> n$ -->
+<!-- ```{r} -->
+<!-- #===== Large p case =====# -->
+<!-- # parameters -->
+<!-- n <- 1e1 -->
+<!-- p <- 1e2 -->
+<!-- lam <- 1 -->
 
-# generate data
-beta <- rnorm(p)
-X <- matrix(rnorm(n * p), nrow = n)
-I <- diag(p)
+<!-- # generate data -->
+<!-- beta <- rnorm(p) -->
+<!-- X <- matrix(rnorm(n * p), nrow = n) -->
+<!-- I <- diag(p) -->
 
-# define functions 
-f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
-f2 <- function() {
-  X_svd <- svd(X)
-  V <- X_svd$v
-  d <- X_svd$d
-  Dstar <- diag(d^2/(d^2 + lam))
-  V %*% (Dstar %*% crossprod(V, beta))
-}
+<!-- # define functions  -->
+<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
+<!-- f2 <- function() { -->
+<!--   X_svd <- svd(X) -->
+<!--   V <- X_svd$v -->
+<!--   d <- X_svd$d -->
+<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
+<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
+<!-- } -->
 
-# test speed
-microbenchmark(f1(), f2(), times = 1e3, unit = "us")
-```
+<!-- # test speed -->
+<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
+<!-- ``` -->
 
-and $n \approx p$
-```{r}
-#===== n ~ p case =====#
-# parameters
-n <- 1e2
-p <- 1e2
-lam <- 1
+<!-- and $n \approx p$ -->
+<!-- ```{r} -->
+<!-- #===== n ~ p case =====# -->
+<!-- # parameters -->
+<!-- n <- 1e2 -->
+<!-- p <- 1e2 -->
+<!-- lam <- 1 -->
 
-# generate data
-beta <- rnorm(p)
-X <- matrix(rnorm(n * p), nrow = n)
-I <- diag(p)
+<!-- # generate data -->
+<!-- beta <- rnorm(p) -->
+<!-- X <- matrix(rnorm(n * p), nrow = n) -->
+<!-- I <- diag(p) -->
 
-# define functions 
-f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta)
-f2 <- function() {
-  X_svd <- svd(X)
-  V <- X_svd$v
-  d <- X_svd$d
-  Dstar <- diag(d^2/(d^2 + lam))
-  V %*% (Dstar %*% crossprod(V, beta))
-}
+<!-- # define functions  -->
+<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
+<!-- f2 <- function() { -->
+<!--   X_svd <- svd(X) -->
+<!--   V <- X_svd$v -->
+<!--   d <- X_svd$d -->
+<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
+<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
+<!-- } -->
 
-# test speed
-microbenchmark(f1(), f2(), times = 1e3, unit = "us")
-```
+<!-- # test speed -->
+<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
+<!-- ``` -->
 
 
-## Matrix Multiplication Timing
+<!-- ## Matrix Multiplication Timing -->
 
-Consider the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$).
+<!-- Consider the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$). -->
 
-```{r}
-set.seed(124)
-#===== Large n case =====#
+<!-- ```{r} -->
+<!-- set.seed(124) -->
+<!-- #===== Large n case =====# -->
 
-# set parameters
-n <- 1e3
-p <- 1e2
-lam <- 1
+<!-- # set parameters -->
+<!-- n <- 1e3 -->
+<!-- p <- 1e2 -->
+<!-- lam <- 1 -->
 
-# generate data
-X <- matrix(rnorm(n * p), nrow = n)
-beta <- rnorm(p)
-eps <- rnorm(n)
-y <- X %*% beta + eps
+<!-- # generate data -->
+<!-- X <- matrix(rnorm(n * p), nrow = n) -->
+<!-- beta <- rnorm(p) -->
+<!-- eps <- rnorm(n) -->
+<!-- y <- X %*% beta + eps -->
 
-ytilde <- y - mean(y)
-xbar <- colMeans(X)
-Xtilde <- sweep(X, 2, xbar)
+<!-- ytilde <- y - mean(y) -->
+<!-- xbar <- colMeans(X) -->
+<!-- Xtilde <- sweep(X, 2, xbar) -->
 
-# compute decomposition
-Xtilde_svd <- svd(Xtilde)
-U <- Xtilde_svd$u
-d <- Xtilde_svd$d
-V <- Xtilde_svd$v
-Dstar <- diag(d/(d^2 + lam))
-  
-# define multiplication functions
-f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
-f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
-f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
-f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
-f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+<!-- # compute decomposition -->
+<!-- Xtilde_svd <- svd(Xtilde) -->
+<!-- U <- Xtilde_svd$u -->
+<!-- d <- Xtilde_svd$d -->
+<!-- V <- Xtilde_svd$v -->
+<!-- Dstar <- diag(d/(d^2 + lam)) -->
 
-# test speed
-microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
-```
+<!-- # define multiplication functions -->
+<!-- f1 <- function() V %*% Dstar %*% t(U) %*% ytilde -->
+<!-- f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde) -->
+<!-- f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde)) -->
+<!-- f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde)) -->
+<!-- f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde)) -->
 
-```{r}
-#===== Large p case =====#
-set.seed(124)
+<!-- # test speed -->
+<!-- microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us") -->
+<!-- ``` -->
 
-# set parameters
-n <- 1e2
-p <- 1e3
-lam <- 1
+<!-- ```{r} -->
+<!-- #===== Large p case =====# -->
+<!-- set.seed(124) -->
 
-# generate data
-X <- matrix(rnorm(n * p), nrow = n)
-beta <- rnorm(p)
-eps <- rnorm(n)
-y <- X %*% beta + eps
+<!-- # set parameters -->
+<!-- n <- 1e2 -->
+<!-- p <- 1e3 -->
+<!-- lam <- 1 -->
 
-# define multiplication functions
-f1 <- function() V %*% Dstar %*% t(U) %*% ytilde
-f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde)
-f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde))
-f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde))
-f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde))
+<!-- # generate data -->
+<!-- X <- matrix(rnorm(n * p), nrow = n) -->
+<!-- beta <- rnorm(p) -->
+<!-- eps <- rnorm(n) -->
+<!-- y <- X %*% beta + eps -->
 
-# test speed
-microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us")
-```
+<!-- # define multiplication functions -->
+<!-- f1 <- function() V %*% Dstar %*% t(U) %*% ytilde -->
+<!-- f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde) -->
+<!-- f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde)) -->
+<!-- f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde)) -->
+<!-- f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde)) -->
+
+<!-- # test speed -->
+<!-- microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us") -->
+<!-- ``` -->
 
 
