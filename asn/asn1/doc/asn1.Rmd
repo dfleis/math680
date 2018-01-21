@@ -128,13 +128,13 @@ so that
 
 We present a function written in `R` performing such calculations below.
 
-```{r, cache = T}
+```{r}
 ridge_coef <- function(X, y, lam) {
   Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
   
   ytilde <- y - mean(y) # center response
   xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # center each predictor according to its mean
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # center each col according to its mean
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
@@ -190,7 +190,7 @@ as desired. We once again may be interested in applying the SVD on $\tilde X$ as
 where $D^{**}$ is a diagonal $\min\left(n, p - 1\right)\times\min\left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. 
 
 We now wish to perform a simulation study to estimate our theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. For readability we first define functions computing the theoretical mean and variance according to our above expressions.
-```{r, cache = T}
+```{r}
 ridge_coef_params <- function(X, lam, beta, sigma) {
   n <- nrow(X); p <- ncol(X)
   betam1 <- beta[-1] # remove intercept term
@@ -224,7 +224,7 @@ ridge_coef_params <- function(X, lam, beta, sigma) {
 ```
 
 We may now perform our simulation.
-```{r, cache = T}
+```{r}
 set.seed(124)
 
 # set parameters
@@ -268,7 +268,7 @@ We see that the empirical sample estimates are very close to their theoretical v
 # Question 3
 
 Prior to writing our cross-validation function we create some helper functions for the sake of readability
-```{r, cache = T}
+```{r}
 ridge_cv_lam <- function(X, y, lam, K) {
   # Helper function for ridge_cv()
   # perform K-fold cross-validation on the ridge regression 
@@ -305,7 +305,7 @@ ridge_cv_lam <- function(X, y, lam, K) {
 ```
 
 Then, our cross-validation function is as follows:
-```{r, cache = T}
+```{r}
 ridge_cv <- function(X, y, lam.vec, K) {
   # perform K-fold cross-validation on the ridge regression 
   # estimation problem over tuning parameters given in lam.vec
@@ -326,7 +326,7 @@ ridge_cv <- function(X, y, lam.vec, K) {
 # Question 4
 
 For this problem we first set some global libraries/functions
-```{r, message = F, cache = T}
+```{r, message = F}
 library(doParallel)
 
 rmvn <- function(n, p, mu = 0, S = diag(p)) {
@@ -342,12 +342,12 @@ loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2)
 ```
 
 and global parameters which remain constant across (a)-(d)
-```{r, cache = T}
+```{r}
 set.seed(124)
 
 # global parameters
 nsims <- 10
-n <- 20
+n <- 10
 Ks <- c(5, 10, n)
 lams <- 10^seq(-8, 8, 0.5)
 sigma_star <- sqrt(1/2)
@@ -359,7 +359,7 @@ names(coef_list) <- c("OLS", "K5", "K10", "Kn")
 
 ## (a)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 50
 theta <- 0.5
@@ -403,7 +403,7 @@ round(sim_se, 4)
 
 ## (b)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 50
 theta <- 0.9
@@ -447,7 +447,7 @@ round(sim_se, 4)
 
 ## (c)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 200
 theta <- 0.5
@@ -491,7 +491,7 @@ round(sim_se, 4)
 
 ## (d)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 200
 theta <- 0.9
