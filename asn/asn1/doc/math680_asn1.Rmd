@@ -174,19 +174,19 @@ scale_faster <- function(x,
     x <- x[, cols, drop = FALSE]
   }
   # Get the column means
-  cm = colMeans(x, na.rm = TRUE)
+  cm <- colMeans(x, na.rm = TRUE)
   # Get the column sd
   if (scale) {
-    csd = colSds(x, center = cm)
+    csd <- colSds(x, center = cm)
   } else {
     # just divide by 1 if not
-    csd = rep(1, length = length(cm))
+    csd <- rep(1, length = length(cm))
   }
   if (!center) {
     # just subtract 0
-    cm = rep(0, length = length(cm))
+    cm <- rep(0, length = length(cm))
   }
-  x = t( (t(x) - cm) / csd )
+  x <- t((t(x) - cm) / csd)
   if (add_attr) {
     if (center) {
       attr(x, "scaled:center") <- cm
@@ -204,7 +204,7 @@ ridge_coef_faster <- function(X, y, lam) {
   # coef(MASS::lm.ridge(X, y, lam))
   
   Xm1 <- X[,-1]
-  n <- nrow(X); ybar <- mean(y); #sqrt_sc <- sqrt(n/(n - 1))
+  n <- nrow(X); ybar <- .Internal(mean(y)); #sqrt_sc <- sqrt(n/(n - 1))
   #Xtilde <- scale_faster(Xm1) * sqrt_sc
   Xtilde <- scale_faster(Xm1, scale = F)
   ytilde <- y - ybar
@@ -359,7 +359,7 @@ ridge_cv_lam <- function(X, y, lam, K) {
   # weighted average (according to group size, some groups may have
   # +/- 1 member depending on whether sizes divided unevenly) of
   # cross validation error for a fixed lambda
-  sum((cv_err * table(folds)))/n
+  sum((cv_err * tabulate(folds)))/n
 }
 ```
 
@@ -405,7 +405,7 @@ and global parameters which remain constant across (a)-(d)
 set.seed(124)
 
 # global parameters
-nsims <- 50
+nsims <- 4
 n <- 100
 Ks <- c(5, 10, n)
 lams <- 10^seq(-8, 8, 0.5)
