@@ -5,7 +5,7 @@ date: "Last Update: `r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -156,8 +156,11 @@ ridge_coef <- function(X, y, lam) {
 }
 ```
 
-It turns out the following implementation will be considerably quicker
-```{r}
+For computational reasons we will use an Cholesky decomposition implemented in `C++` instead:
+```{r, message = F}
+library(Rcpp)
+sourceCpp("../code/ridge_coef.cpp")
+
 scale_faster <- function(x,
                        center = TRUE,
                        scale = TRUE,
@@ -209,8 +212,7 @@ ridge_coef_faster <- function(X, y, lam) {
   Xtilde <- scale_faster(Xm1, scale = F)
   ytilde <- y - ybar
   
-  b <- chol2inv(chol(crossprod(Xtilde) + lam * diag(ncol(Xm1)))) %*% 
-    crossprod(Xtilde, ytilde) #* 
+  b <- ridge_coef_cpp(Xtilde, ytilde, lam) #* 
     #sqrt_sc * 1/attr(Xtilde, "scaled:scale")
 
   b1 <- ybar - sum(attr(Xtilde, "scaled:center") * b)
@@ -363,7 +365,7 @@ ridge_cv_lam <- function(X, y, lam, K) {
 }
 ```
 
-Then, our cross-validation function is as follows:
+Then, our cross-validation function is as follows
 ```{r}
 ridge_cv <- function(X, y, lam.vec, K) {
   # perform K-fold cross-validation on the ridge regression 
