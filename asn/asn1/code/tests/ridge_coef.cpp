@@ -28,7 +28,7 @@ inline out convertVector(const inp& vectorinput) {
 }
 
 // [[Rcpp::export]]
-NumericMatrix ridge_coef_cpp(NumericMatrix X, NumericVector y, double l) {
+NumericMatrix ridge_coef_chol_cpp(NumericMatrix X, NumericVector y, double l) {
   MatrixXd A = convertMatrix<Eigen::MatrixXd, Rcpp::NumericMatrix>(X);
   VectorXd b = convertVector<Eigen::VectorXd, Rcpp::NumericVector>(y);
   MatrixXd I = VectorXd::Ones(A.cols()).asDiagonal();
@@ -39,3 +39,33 @@ NumericMatrix ridge_coef_cpp(NumericMatrix X, NumericVector y, double l) {
   
   return convertMatrix<Rcpp::NumericMatrix, Eigen::MatrixXd>(llt.solve(At * b));
 }
+// [[Rcpp::export]]
+List svd_cpp(NumericMatrix X, double l) {
+  MatrixXd A = convertMatrix<Eigen::MatrixXd, Rcpp::NumericMatrix>(X);
+  JacobiSVD<MatrixXd> svd(A, ComputeThinU | ComputeThinV);
+  
+  ArrayXd d = svd.singularValues();
+  MatrixXd Dstar = (d/(d.pow(2) + l)).array().matrix().asDiagonal();
+  
+  List L;
+  L["U"]     = convertMatrix<Rcpp::NumericMatrix, Eigen::MatrixXd>(svd.matrixU());
+  L["Dstar"] = convertMatrix<Rcpp::NumericMatrix, Eigen::MatrixXd>(Dstar);
+  L["V"]     = convertMatrix<Rcpp::NumericMatrix, Eigen::MatrixXd>(svd.matrixV());
+  return L;
+}
+
+
+/*** R
+n <- 5
+p <- 2
+l <- 1
+X <- matrix(rnorm(n * p), nrow = n)
+beta <- rnorm(p + 1)
+y <- cbind(1, X) %*% beta + rnorm(n)
+
+svd_cpp(X, l)
+
+*/
+
+
+

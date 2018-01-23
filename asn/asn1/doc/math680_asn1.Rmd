@@ -123,7 +123,7 @@ ridge_coef <- function(X, y, lam) {
   Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y)
   
   # center each predictor according to its mean
-  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # * sqrt(n/(n - 1))
+  Xtilde <- (Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar)) # * sqrt(n/(n - 1))
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
@@ -728,22 +728,22 @@ Consider our objective function
   f(\beta) = \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta\rVert^2_2 + \frac{\lambda_2}{2} \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2.
 \end{equation*}
 
-To show convexity we wish to show $\nabla^2 f(\beta) \in \mathbb S^{p-1}_+$. However, it's not immediately obvious how to take such a gradient with our fused sum terms $\left(b_j - \beta_{j-1}\right)^2$. One way to get around this is to define vector $B \in \mathbb R^{p-1}$ given by
+To show convexity we wish to show $\nabla^2 f(\beta) \in \mathbb S^{p-1}_+$. However, it's not immediately obvious how to take such a gradient with our fused sum terms $\left(\beta_j - \beta_{j-1}\right)^2$. In order to be able to take the gradient we wish to express the objective function strictly in terms of the vector $\beta$. One way to accomplish this is to define vector $B \in \mathbb R^{p-1}$ given by
 \begin{equation*}
   B =
   \begin{bmatrix}
     \beta_2 - \beta_1 \\
     \vdots \\
     \beta_p - \beta_{p-1}
-  \end{bmatrix}.
+  \end{bmatrix},
 \end{equation*}
 
-Then
+so that
 \begin{equation*}
   \sum^p_{j = 2}\left(\beta_j - \beta_{j - 1}\right)^2 = B^T B.
 \end{equation*}
 
-In order to achieve our task of expressing the fused sum in terms of the vector $\beta$ we must next decompose $B$ into a product of $\beta$ and some matrix. To this end we define matrix $A \in \mathbb R^{(p-2)\times (p-1)}$ with entries -1 along the main diagonal and 1 along the upper diagonal, i.e.,
+Next, define matrix $A \in \mathbb R^{(p-2)\times (p-1)}$ with entries -1 along the main diagonal and 1 along the upper diagonal, i.e.,
 \begin{equation*}
   A = 
   \begin{bmatrix}
@@ -754,20 +754,20 @@ In order to achieve our task of expressing the fused sum in terms of the vector 
   \end{bmatrix}.
 \end{equation*}
 
-Then
+Using this matrix $A$ permits us to express our fused sum $\sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2 = B^T B$ in terms of the vector $\beta$, i.e.,
 \begin{align*}
   \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2 &= B^T B \\
   &= \beta^T A^T A \beta \\
   &\equiv \lVert A\beta\rVert^2_2.
 \end{align*}
 
-Therefore, our objective function can be expressed as
+Therefore, our objective function is expressible as
 \begin{align*}
   f(\beta) &= \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta \rVert^2_2 + \frac{\lambda_2}{2}\lVert A \beta \rVert^2_2 \\
   &\equiv \frac{1}{2} \tilde Y^T \tilde Y - \beta^T \tilde X^T \tilde Y + \frac{1}{2} \beta^T \tilde X^T \tilde X \beta + \frac{\lambda_1}{2}\beta^T \beta + \frac{\lambda_2}{2}\beta^T A^T A \beta.
 \end{align*}
 
-Hence
+Hence,
 \begin{equation*}
   \nabla f(\beta) = -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta, 
 \end{equation*}
@@ -777,7 +777,7 @@ admitting the Hessian
   \nabla^2 f(\beta) = \tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A.
 \end{equation*}
 
-Recalling that a matrix multiplied with its transpose must always be positive semi-definite, we find $\tilde X^T X$ and $A^T A$ must be positive semi-definite. Thus, since $\lambda_1 > 0$, we find that our sum $\tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A = \nabla^2 f(\beta)$ is positive semi-definite, and so $f(\beta)$ must be strictly convex, as desired.
+Recalling that a matrix multiplied with its transpose must always be positive semi-definite, we find that $\tilde X^T X$ and $A^T A$ must be positive semi-definite. Thus, since $\lambda_1 > 0$, the sum $\tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A = \nabla^2 f(\beta)$ is positive definite, and so $f(\beta)$ must be strictly convex in $\beta$, as desired.
 
 ## (b)
 
@@ -810,29 +810,27 @@ fused_ridge_coef <- function(X, y, lam1, lam2) {
   # remove leading column, find predictor means, center response
   Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
   # center each predictor according to its mean
-  Xtilde <- sweep(Xm1, 2, xbar) 
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) 
   
   I <- diag(p - 1)
   UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
   J <- -1 * cbind(diag(p - 2), rep(0, p - 2)) # diag (p - 2)*(p - 1) matrix
   A <- J + UD
   
-  M <- solve(crossprod(Xtilde) + lam1 * I + lam2 * crossprod(A))
-  b <- M %*% crossprod(Xtilde, y)
+  b <- solve(crossprod(Xtilde) + lam1 * I + lam2 * crossprod(A),
+             crossprod(Xtilde, ytilde))
   b0 <- mean(y) - crossprod(xbar, b)
-  return(list(b0 = b0, b = b))
+  list(b0 = b0, b = b)
 }
-fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
+fused_ridge_coef_true <- function(X, lam1, lam2, beta, sigma) {
   # Returns theoretical means and variances for the fused ridge problem
   # Note: Omits intercept term b0
   n <- nrow(X); p <- ncol(X)
   
-  # remove leading column, remove intercept 
-  Xm1 <- X[,-1]; betam1 <- beta[-1]
-  # find predictor means, center response
-  xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
+  # remove leading column, remove intercept, center predictors
+  Xm1 <- X[,-1]; betam1 <- beta[-1]; xbar <- colMeans(Xm1)
   # center each predictor according to its mean
-  Xtilde <- sweep(Xm1, 2, xbar) 
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar)
   
   I <- diag(p - 1)
   UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
@@ -841,14 +839,7 @@ fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
   
   M <- solve(crossprod(Xtilde) + lam1 * I + lam2 * crossprod(A))
   b <- M %*% crossprod(Xtilde, (Xtilde %*% betam1))
-  
-  vcv <- matrix(0, nrow = p - 1, ncol = p - 1)
-  if (n > p) { # when n > p this matrix multiplication routine is quicker
-    vcv <- sigma^2 * M %*% tcrossprod(crossprod(Xtilde), M)
-  } else { # when p > n this matrix multiplication routine is quicker
-   vcv <- sigma^2 * tcrossprod(M, Xtilde) %*% tcrossprod(Xtilde, M)
-  }
-  
+  vcv <- sigma^2 * M %*% tcrossprod(crossprod(Xtilde), M)
   list(b = b, vcv = vcv)
 }
 ```
@@ -861,8 +852,7 @@ set.seed(124)
 nsims <- 1e4
 n <- 1e2
 p <- 5
-lam1 <- 1
-lam2 <- 1
+lam1 <- 1; lam2 <- 1; 
 sigma_star <- 1
 beta_star <- rnorm(p)
 
@@ -870,7 +860,7 @@ beta_star <- rnorm(p)
 X <- cbind(rep(1, n), matrix(rnorm(n * (p - 1)), nrow = n, ncol = p - 1))
 
 # compute expected parameter values
-par_true <- fused_ridge_coef_params(X, lam1, lam2, beta_star, sigma_star)
+par_true <- fused_ridge_coef_true(X, lam1, lam2, beta_star, sigma_star)
 b_true <- as.vector(par_true$b)
 vcv_true <- par_true$vcv
 
