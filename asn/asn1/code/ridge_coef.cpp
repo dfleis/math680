@@ -28,7 +28,7 @@ inline out convertVector(const inp& vectorinput) {
 }
 
 // [[Rcpp::export]]
-NumericMatrix ridge_coef_cpp(NumericMatrix X, NumericVector y, float l) {
+NumericMatrix ridge_coef_cpp(NumericMatrix X, NumericVector y, double l) {
   MatrixXd A = convertMatrix<Eigen::MatrixXd, Rcpp::NumericMatrix>(X);
   VectorXd b = convertVector<Eigen::VectorXd, Rcpp::NumericVector>(y);
   MatrixXd I = VectorXd::Ones(A.cols()).asDiagonal();

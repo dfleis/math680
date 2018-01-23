@@ -9,9 +9,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# check what to do for the OLS/lambda = 0 case for p > n (Q4)
-# remove longwinded answers (expected values/variance estimates... no need to use SVD)
-
 # Question 1
 
 From our definitions of $\tilde X$ and $\tilde Y$
@@ -54,7 +51,7 @@ Define our objective function $f\,:\,\mathbb R^p \to \mathbb R$ by
   &= \tilde Y^T \tilde Y - 2\beta^T \tilde X^T \tilde Y + \beta^T \tilde X^T \tilde X \beta + \lambda \beta^T \beta.
 \end{align*}
 
-Therefore, by taking the gradient we find
+Therefore
 \begin{equation*}
   \nabla f(\beta) = -2\tilde X^T \tilde Y + 2\tilde X^T \tilde X \beta + 2\lambda \beta,
 \end{equation*}
@@ -81,21 +78,21 @@ Hence,
 \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_{++},
 \end{equation*}
 
-and so $f$ must be strictly convex in $\beta$.
+and so $f$ must be strictly convex in $\beta$, as desired.
 
 ## (c)
 
-Suppose a strictly convex function $f$ is globally minimized at distinct points $x$ and $y$. By strict convexity
+Suppose a strictly convex function $f$ is globally minimized at distinct points $x$ and $y$. By the definition of strict convexity
 \begin{equation*}
   \forall\,t\in (0, 1) \quad f(tx + (1-t)y) < tf(x) + (1-t)f(y).
 \end{equation*}
 
-Since $f$ is minimized at both $x$ and $y$ we have $f(x) = f(y)$, so
+Then, since $f$ is minimized at both $x$ and $y$, we have $f(x) = f(y)$, so
 \begin{equation*}
   f(tx + (1-t)y) < tf(x) + (1-t)f(x) = f(x).
 \end{equation*}
 
-However, this implies that the point $z = tx + (1 - t)y$ yields a value of $f$ even *smaller* than at $x$, contradicting our assumption that $x$ is a global minimizer. Therefore, strict convexity implies that the global minimizer must be unique, and so for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
+However, this implies that the point $z = tx + (1 - t)y$ admits a value of $f$ even *smaller* than at $x$, contradicting our assumption that $x$ is a global minimizer, implying strict convexity is a sufficient condition for a unique global minimizer. Hence, for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
 
 ## (d)
 
@@ -112,113 +109,36 @@ For the purpose of computational efficiency we make use of the singular value de
 for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal and zero elsewhere. Hence,
 \begin{align*}
   \hat\beta^{(\lambda)}_{-1} &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \\
-  &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \tilde Y \\
-  &= \left(VD^TU^T UDV^T + \lambda V V^T\right)^{-1} VD^TU^T \tilde Y \\
-  &= \left(V\left(D^TD + \lambda \mathbb I_{p- 1} \right)V^T\right)^{-1} VD^TU^T \tilde Y \\
-  &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} V^T VD^TU^T \tilde Y \\
+  &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \\
   &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y.
 \end{align*}
 
-Note that $D^TD + \lambda \mathbb I_{p- 1}$ is a diagonal $(p-1)\times(p-1)$ matrix with entries $d_j^2 + \lambda$, $j = 1, ..., p - 1$, and so the inverse $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}$ must also be diagonal with entries $\left(d^2_j + \lambda\right)^{-1}$, $j = 1, ..., p - 1$. We exploit this to avoid performing a matrix inversion in our function. For brevity, let
-\begin{equation*}
-  D^* = \left(D^T D + \lambda I_{p - 1}\right)^{-1} D^T,
-\end{equation*}
-
-so that
-\begin{equation*}
-  \hat\beta^{(\lambda)} = V D^* U^T \tilde Y.
-\end{equation*}
-
-We present a function written in `R` performing such calculations below.
+Note that $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}D^T$ is diagonal with entries $\frac{d_j}{d^2_j + \lambda}$, $j = 1, ..., p - 1$. We exploit this to avoid performing an explicit matrix inversion in our function.
 
 ```{r}
 ridge_coef <- function(X, y, lam) {
-  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
+  # Commented-out scaling parameters represent the transformations
+  # used to make the output identical to that of 
+  # coef(MASS::lm.ridge(y ~ X[,-1], lambda = lam))
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y)
   
-  ytilde <- y - mean(y) # center response
-  xbar <- colMeans(Xm1) # find predictor means
   # center each predictor according to its mean
-  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) 
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) # * sqrt(n/(n - 1))
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
-  U <- Xtilde_svd$u
-  d <- Xtilde_svd$d
-  V <- Xtilde_svd$v
+  U <- Xtilde_svd$u; d <- Xtilde_svd$d; V <- Xtilde_svd$v
   
   # compute the inverse (D^T D + lambda I_{p-1})^{-1} D^T
   Dstar <- diag(d/(d^2 + lam))
   
   # compute ridge coefficients
-  b <- V %*% (Dstar %*% crossprod(U, ytilde)) # slopes
-  b1 <- mean(y) - crossprod(xbar, b) # intercept
+  b <- V %*% (Dstar %*% crossprod(U, ytilde)) # * 1/xbar * sqrt(n/(n - 1))
+  b1 <- mean(y) - crossprod(xbar, b) 
   list(b1 = b1, b = b)
 }
 ```
 
-For computational reasons we will use an Cholesky decomposition implemented in `C++` instead:
-```{r, message = F}
-library(Rcpp)
-sourceCpp("../code/ridge_coef.cpp")
-
-scale_faster <- function(x,
-                       center = TRUE,
-                       scale = TRUE,
-                       add_attr = TRUE,
-                       rows = NULL,
-                       cols = NULL) {
-  # adapted from
-  # https://www.r-bloggers.com/a-faster-scale-function/
-  if (!is.null(rows) && !is.null(cols)) {
-    x <- x[rows, cols, drop = FALSE]
-  } else if (!is.null(rows)) {
-    x <- x[rows, , drop = FALSE]
-  } else if (!is.null(cols)) {
-    x <- x[, cols, drop = FALSE]
-  }
-  # Get the column means
-  cm <- colMeans(x, na.rm = TRUE)
-  # Get the column sd
-  if (scale) {
-    csd <- colSds(x, center = cm)
-  } else {
-    # just divide by 1 if not
-    csd <- rep(1, length = length(cm))
-  }
-  if (!center) {
-    # just subtract 0
-    cm <- rep(0, length = length(cm))
-  }
-  x <- t((t(x) - cm) / csd)
-  if (add_attr) {
-    if (center) {
-      attr(x, "scaled:center") <- cm
-    }
-    if (scale) {
-      attr(x, "scaled:scale") <- csd
-    }
-  }
-  return(x)
-}
-
-ridge_coef_faster <- function(X, y, lam) {
-  # Commented-out scaling parameters represent the transformations
-  # used to make the output identical to that of 
-  # coef(MASS::lm.ridge(X, y, lam))
-  
-  Xm1 <- X[,-1]
-  n <- nrow(X); ybar <- .Internal(mean(y)); #sqrt_sc <- sqrt(n/(n - 1))
-  #Xtilde <- scale_faster(Xm1) * sqrt_sc
-  Xtilde <- scale_faster(Xm1, scale = F)
-  ytilde <- y - ybar
-  
-  b <- ridge_coef_cpp(Xtilde, ytilde, lam) #* 
-    #sqrt_sc * 1/attr(Xtilde, "scaled:scale")
-
-  b1 <- ybar - sum(attr(Xtilde, "scaled:center") * b)
-  list(b1 = b1, b = b)
-}
-```
 
 ## (e)
 
@@ -226,17 +146,17 @@ We first take the expectation of $\hat\beta^{(\lambda)}_{-1}$
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \mathbb E \left[ \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right] \\
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \mathbb E \left[ \tilde Y \right] \\
-  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1} 
+  &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1}.
 \end{align*}
 
-If $p >> n$ then using the SVD on $\tilde X$ may yield some speed improvements, that is, with $\tilde X = U D V^T$ as above, we find
+Once again using the SVD of $\tilde X$ yields the more elegant expression
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1}  \\
   &= V \left(D^T D + \lambda \mathbb I_{p - 1}\right)^{-1} D^T D V^T \beta_{-1} \\
-  &= V D^* V^T \beta_{-1}
+  &= V D^* V^T \beta_{-1},
 \end{align*}
 
-where $D^*$ is a diagonal $\min \left(n, p - 1\right) \times \min \left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. We next compute the variance of our centered ridge estimates
+where $D^*$ is a diagonal matrix with entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We next take the he variance of our centered ridge estimates 
 \begin{align*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \text{Var} \left( \tilde Y \right) \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \right)^T \\
@@ -244,45 +164,25 @@ where $D^*$ is a diagonal $\min \left(n, p - 1\right) \times \min \left(n, p - 1
   &= \sigma^2_* \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1}
 \end{align*}
 
-as desired. We once again may be interested in applying the SVD on $\tilde X$ as we had done before. Such a decomposition gives us a more concise solution
+We may yet again apply the SVD of $\tilde X$, yielding the more concise expression
 \begin{equation*}
-  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) = V D^{**} V^T
+  \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) = V D^{**} V^T,
 \end{equation*}
 
-where $D^{**}$ is a diagonal $\min\left(n, p - 1\right)\times\min\left(n, p - 1\right)$ matrix with diagonal entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ and zero elsewhere. 
-
-We now wish to perform a simulation study to estimate our theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. For readability we first define functions computing the theoretical mean and variance according to our above expressions.
+where $D^{**}$ is a diagonal matrix with entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We now perform a simulation study to compare sample estimates with their theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. We first define functions computing the theoretical mean and variance according to our above expressions.
 ```{r}
-ridge_coef_params <- function(X, lam, beta, sigma) {
+ridge_coef_true <- function(X, lam, beta, sigma) {
   n <- nrow(X); p <- ncol(X)
-  betam1 <- beta[-1] # remove intercept term
-  Xm1 <- X[,-1] # remove leading column of 1's in our design matrix
+  betam1 <- beta[-1]; Xm1 <- X[,-1]; xbar <- colMeans(Xm1) 
   
-  xbar <- colMeans(Xm1) # find prector means
   # center each predictor according to its mean
-  Xtilde <- sweep(Xm1, 2, xbar) 
+  Xtilde <- Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar) 
   
-  if (n >= p) {
-    I <- diag(p - 1)
-    inv <- solve(crossprod(Xtilde) + lam * I)
-    
-    b <- solve(crossprod(Xtilde) + lam * I) %*% (crossprod(Xtilde) %*% betam1)
-    vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv
-    list(b = b, vcv = vcv)
-    
-  } else {
-    # compute SVD on the centered design matrix
-    Xtilde_svd <- svd(Xtilde)
-    d <- Xtilde_svd$d
-    V <- Xtilde_svd$v
-    
-    Dstar <- diag(d^2/(d^2 + lam))
-    Dstar2 <- diag(d^2/(d^2 + lam)^2)
-    
-    b <- V %*% (Dstar %*% crossprod(V, betam1))
-    vcv <- V %*% tcrossprod(Dstar2, V)
-    list(b = b, vcv = vcv)
-  }
+  # compute theoretical expectation and variance/covariance matrix
+  inv <- solve(crossprod(Xtilde) + lam * diag(p - 1))
+  b <- inv %*% (crossprod(Xtilde) %*% betam1)
+  vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv
+  list(b = b, vcv = vcv)
 }
 ```
 
@@ -292,37 +192,39 @@ set.seed(124)
 
 # set parameters
 nsims <- 1e3
-n <- 25
-p <- 7
+n <- 100
+p <- 5
 lam <- 4
-beta_star <- 1:p
+beta_star <- (-1)^(1:p) * (1:p)
 sigma_star <- 1
 
 # generate fixed design matrix
 X <- cbind(1, matrix(rnorm(n * (p - 1)), nrow = n))
 
 # compute theoretical mean and variance
-par_true <- ridge_coef_params(X, lam, beta_star, sigma_star)
-b_true <- as.vector(par_true$b)
-vcv_true <- par_true$vcv
+true_vals <- ridge_coef_true(X, lam, beta_star, sigma_star)
+b_true <- as.vector(true_vals$b)
+vcv_true <- true_vals$vcv
 
 # simulate ridge coefficients nsims times
 # outputs a matrix with rows corresponding to coefficients
 # and columns correspond to simulation number
+pt <- proc.time()
 b_hat <- replicate(nsims, {
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  as.vector(ridge_coef_faster(X, y, lam)$b)
+  as.vector(ridge_coef(X, y, lam)$b)
 })
+proc.time() - pt
 
 # estimate variance of b1, ..., b_p estimates
 vcv_hat <- var(t(b_hat)) 
 
-# print estimated fused ridge coefficients vs. expected values
-b <- rbind(rowMeans(b_hat), b_true)
-rownames(b) <- c("b_hat", "b_true")
+# print estimated values vs. expected values
+b <- rbind(rowMeans(b_hat), b_true, abs(rowMeans(b_hat) - b_true))
+rownames(b) <- c("b_hat", "b_true", "abs_err")
 round(b, 4)
 
-# print absolute error between estimated and true fused ridge variances
+# print absolute error between estimated and true variances
 round(abs(vcv_true - vcv_hat), 4) 
 ```
 
@@ -330,56 +232,71 @@ We see that the empirical sample estimates are very close to their theoretical v
 
 # Question 3
 
-Prior to writing our cross-validation function we create some helper functions for the sake of readability
+Note that for the purpose of improved performance we *do not* call our previous `ridge_coef` function. Calling our previous implementation would compute the SVD for each value of $\lambda$. This is unnecessary since the SVD is independent of $\lambda$ (for a fixed design matrix $X$ and response vector $y$). Instead, we perform the SVD prior to separating the vector of tuning parameters.
 ```{r}
-ridge_cv_lam <- function(X, y, lam, K) {
-  # Helper function for ridge_cv()
+ridge_cv <- function(X, y, lam.vec, K) {
   # perform K-fold cross-validation on the ridge regression 
-  # estimation problem over a single tuning parameter lam
-  n <- nrow(X)
-  
-  if (K > n) { 
-    stop(paste0("K > ", n, "."))
-  } else if (K < 2) {
-    stop("K < 2.")
-  }
+  # estimation problem over tuning parameters given in lam.vec
+  n <- nrow(X); p <- ncol(X); L <- length(lam.vec)
   
   # groups to cross-validate over
   folds <- cut(1:n, breaks = K, labels = F)
   # get indices of training subset
   train_idxs <- lapply(1:K, function(i) !(folds %in% i))
   
-  cv_err <- sapply(train_idxs, function(tr_idx) {
-    # train our model, extract fitted coefficients
-    b_train <- unlist(ridge_coef_faster(X[tr_idx,], y[tr_idx], lam))
+  # preallocate empty data structure to store our CV errors 
+  # for each lambda & fold
+  cv_errs_lams_folds <- matrix(0, nrow = L, ncol = K)
+  cv_errs_lams_folds <- sapply(train_idxs, function(trn_idx) {
+    tst_idx <- !trn_idx # find test subset indices
     
-    # fit testing data
-    yhat <- X[!tr_idx,] %*% b_train
-    # compute test error
-    sum((y[!tr_idx] - yhat)^2)
-  })
-  # weighted average (according to group size, some groups may have
-  # +/- 1 member depending on whether sizes divided unevenly) of
-  # cross validation error for a fixed lambda
-  sum((cv_err * tabulate(folds)))/n
-}
-```
+    # subset data and remove intercept column in the design matrix
+    Xm1_trn <- X[trn_idx, -1]; y_trn <- y[trn_idx] 
+    xbar_trn <- colMeans(Xm1_trn); ytilde_trn <- y_trn - mean(y_trn) 
 
-Then, our cross-validation function is as follows
-```{r}
-ridge_cv <- function(X, y, lam.vec, K) {
-  # perform K-fold cross-validation on the ridge regression 
-  # estimation problem over tuning parameters given in lam.vec
-  n <- nrow(X); p <- ncol(X)
+    # center each predictor according to its mean
+    Xtilde_trn <- Xm1_trn - tcrossprod(rep(1, nrow(Xm1_trn)), xbar_trn) 
   
-  cv.error <- sapply(lam.vec, function(l) ridge_cv_lam(X, y, l, K))
+    # compute the SVD on the centered design matrix
+    # Note: This is done before computing our coefficients for each
+    # lambda since the SVD will be identical across the vector of
+    # tuning parameters
+    Xtilde_trn_svd <- svd(Xtilde_trn)
+    U <- Xtilde_trn_svd$u; d <- Xtilde_trn_svd$d; V <- Xtilde_trn_svd$v
+    d2 <- d^2
+    
+    # preallocate empty data structure to store CV errors 
+    # for each value of lambda
+    cv_errs_lams <- vector(mode = 'numeric', length = L)
+    cv_errs_lams <- sapply(lam.vec, function(lam) {
+      # compute the inverse (D^T D + lambda I_{p-1})^{-1} D^T
+      Dstar <- diag(d/(d2 + lam))
+      # compute ridge coefficients
+      b_trn <- V %*% (Dstar %*% crossprod(U, ytilde_trn)) 
+      b1_trn <- mean(y_trn) - crossprod(xbar_trn, b_trn)
+      
+      # fit test data
+      yhat_tst <- X[tst_idx,] %*% c(b1_trn, b_trn)
+      # compute test error
+      sum((y[tst_idx] - yhat_tst)^2)
+    })
+    cv_errs_lams
+  })
   
-  # extract best tuning parameter and corresponding coefficient estimates
+  #  weighted average according to group size (some groups may have 
+  # +/- 1 member depending on whether K can't divide sizes evenly) of
+  # cross validation error for each value of lambda
+  cv.error <- apply(cv_errs_lams_folds, 1, 
+                    function(cv_errs_folds) {
+                      sum(cv_errs_folds * tabulate(folds))
+                    })/n
+  
+  # extract the optimal value of our tuning parameter lambda
+  # and (re)compute the corresponding coefficient estimates
   best.lam <- lam.vec[cv.error == min(cv.error)]
-  best.fit <- ridge_coef_faster(X, y, best.lam)
+  best.fit <- ridge_coef(X, y, best.lam)
   b1 <- best.fit$b1
   b <- best.fit$b
-  
   list(b1 = b1, b = b, best.lam = best.lam, cv.error = cv.error)
 }
 ```
@@ -400,6 +317,7 @@ rmvn <- function(n, p, mu = 0, S = diag(p)) {
 }
 loss1 <- function(beta, b) sum((b - beta)^2, na.rm = T)
 loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2, na.rm = T)
+se <- function(x) sd(x)/length(x)
 ```
 
 and global parameters which remain constant across (a)-(d)
@@ -407,20 +325,20 @@ and global parameters which remain constant across (a)-(d)
 set.seed(124)
 
 # global parameters
-nsims <- 4
+nsims <- 50
 n <- 100
 Ks <- c(5, 10, n)
 lams <- 10^seq(-8, 8, 0.5)
 sigma_star <- sqrt(1/2)
 
-# empty data structure to store our results
+# preallocate empty data structure to store our results
 coef_list <- vector(mode = 'list', length = length(Ks) + 1)
 names(coef_list) <- c("OLS", "K5", "K10", "Kn")
 ```
 
 ## (a)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 50
 theta <- 0.5
@@ -431,14 +349,13 @@ SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
 X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
 # simulation
-pt <- proc.time()
-registerDoParallel(cores = 4)
-
+pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
   
   # compute OLS estimates (lambda = 0)
-  ols_fit <- ridge_coef_faster(X, y, 0)
+  ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
   
   # compute the cross-validated ridge estimates for each K
@@ -446,18 +363,22 @@ sim <- foreach(1:nsims, .combine = cbind) %dopar% {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
   })
-
+  
+  # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
   list(l1, l2)
 }
+proc.time() - pt
+
+# restructure losses for readability
 sim_loss <- lapply(1:nrow(sim), function(i) sapply(sim[i,], function(s) s))
 names(sim_loss) <- c("Loss 1", "Loss 2")
 
+# compute loss mean across our sims
 sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
-sim_se <- t(
-  sapply(sim_loss, function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
-proc.time() - pt
+# compute loss std error across our sims
+sim_se <- t(sapply(sim_loss, function(s) apply(s, 1, function(x) se(x))))
 
 # report results
 round(sim_means, 4)
@@ -466,7 +387,7 @@ round(sim_se, 4)
 
 ## (b)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 50
 theta <- 0.9
@@ -477,33 +398,36 @@ SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
 X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
 # simulation
-pt <- proc.time()
-registerDoParallel(cores = 4)
-
+pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-
-  # compute OLS estimates (lambda = 0)  
-  ols_fit <- ridge_coef_faster(X, y, 0)
+  
+  # compute OLS estimates (lambda = 0)
+  ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-
+  
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
   })
-
+  
+  # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
   list(l1, l2)
 }
+proc.time() - pt
+
+# restructure losses for readability
 sim_loss <- lapply(1:nrow(sim), function(i) sapply(sim[i,], function(s) s))
 names(sim_loss) <- c("Loss 1", "Loss 2")
 
+# compute loss mean across our sims
 sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
-sim_se <- t(
-  sapply(sim_loss, function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
-proc.time() - pt
+# compute loss std error across our sims
+sim_se <- t(sapply(sim_loss, function(s) apply(s, 1, function(x) se(x))))
 
 # report results
 round(sim_means, 4)
@@ -512,7 +436,7 @@ round(sim_se, 4)
 
 ## (c)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 200
 theta <- 0.5
@@ -523,33 +447,36 @@ SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
 X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
 
 # simulation
-pt <- proc.time()
-registerDoParallel(cores = 4)
-
+pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-
-  # compute OLS estimates (lambda = 0)  
+  
+  # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-
+  
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
   })
-
+  
+  # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
   list(l1, l2)
 }
+proc.time() - pt
+
+# restructure losses for readability
 sim_loss <- lapply(1:nrow(sim), function(i) sapply(sim[i,], function(s) s))
 names(sim_loss) <- c("Loss 1", "Loss 2")
 
+# compute loss mean across our sims
 sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
-sim_se <- t(
-  sapply(sim_loss, function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
-proc.time() - pt
+# compute loss std error across our sims
+sim_se <- t(sapply(sim_loss, function(s) apply(s, 1, function(x) se(x))))
 
 # report results
 round(sim_means, 4)
@@ -558,44 +485,42 @@ round(sim_se, 4)
 
 ## (d)
 
-```{r, cache = T}
+```{r}
 # set parameters
 p <- 200
 theta <- 0.9
 
-# generate data
-beta_star <- rnorm(p, 0, sigma_star)
-SIGMA <- outer(1:(p - 1), 1:(p - 1), FUN = function(a, b) theta^abs(a - b))
-X <- cbind(1, rmvn(n, p - 1, 0, SIGMA))
-
 # simulation
-pt <- proc.time()
-registerDoParallel(cores = 4)
-
+pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
+  # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
   
-  # compute OLS estimates (lambda = 0)  
+  # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-
+  
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv$b1, rcv$b))
   })
-
+  
+  # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
   list(l1, l2)
 }
+proc.time() - pt
+
+# restructure losses for readability
 sim_loss <- lapply(1:nrow(sim), function(i) sapply(sim[i,], function(s) s))
 names(sim_loss) <- c("Loss 1", "Loss 2")
 
+# compute loss mean across our sims
 sim_means <- t(sapply(sim_loss, function(s) rowMeans(s)))
-sim_se <- t(
-  sapply(sim_loss, function(s) apply(s, 1, function(x) sd(x)/sqrt(length(x)))))
-proc.time() - pt
+# compute loss std error across our sims
+sim_se <- t(sapply(sim_loss, function(s) apply(s, 1, function(x) se(x))))
 
 # report results
 round(sim_means, 4)
@@ -656,11 +581,9 @@ beta <- rep(0.1, p)
 sigma <- sqrt(2)
 
 Xtilde <- matrix(rnorm(n * p), nrow = n)
-eps <- rnorm(n, 0, sigma^2)
-ytilde <- Xtilde %*% beta + eps
+ytilde <- Xtilde %*% beta + rnorm(n, 0, sigma^2)
 
-rhs <- as.numeric(2/sigma^2 * crossprod(ytilde - Xtilde %*% beta))
-rhs
+(rhs <- as.numeric(2/sigma^2 * crossprod(ytilde - Xtilde %*% beta)))
 n >= rhs
 ```
 
@@ -734,17 +657,15 @@ Our function is as follows
 
 ```{r}
 ridge_coef_mle <- function(X, y, lam, tol = 1e-16) {
-  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
   
-  ytilde <- y - mean(y) # center response
-  xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  # remove leading column, find predictor means, center response
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
+  # center each predictor according to its mean
+  Xtilde <- sweep(Xm1, 2, xbar) 
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
-  U <- Xtilde_svd$u
-  d <- Xtilde_svd$d
-  V <- Xtilde_svd$v
+  U <- Xtilde_svd$u; d <- Xtilde_svd$d; V <- Xtilde_svd$v
   
   ## generate some initial guess for sigma and beta
   sig0 <- rexp(1)
@@ -761,18 +682,17 @@ ridge_coef_mle <- function(X, y, lam, tol = 1e-16) {
     if (abs(sig_new^2 - sig0^2) < tol)
       break
     
-    sig0 <- sig_new
-    b0 <- b_new
-    i <- i + 1
+    sig0 <- sig_new; b0 <- b_new; i <- i + 1
   }
   list(niter = i, sigma = as.numeric(sig_new), b = b_new)
 } 
 grad_mle <- function(X, y, lam, b, s) {
   n <- nrow(X)
-  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
-  ytilde <- y - mean(y) # center response
-  xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  
+  # remove leading column, find predictor means, center response
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
+  # center each predictor according to its mean
+  Xtilde <- sweep(Xm1, 2, xbar) 
   
   gb <- 1/s^2 * crossprod(Xtilde, Xtilde %*% b - ytilde) + lam * b
   gs <- n/(2 * s^2)  - 1/(2 * s^4) * crossprod(ytilde - Xtilde %*% b)
@@ -793,9 +713,7 @@ sigma_star <- sqrt(1/2)
 X <- cbind(1, matrix(rnorm(n * (p - 1)), nrow = n))
 y <- X %*% beta_star + rnorm(n, 0, sigma_star)
 
-rcm <- ridge_coef_mle(X, y, lam)
-rcm
-
+(rcm <- ridge_coef_mle(X, y, lam))
 grad_mle(X, y, lam, rcm$b, rcm$sigma)
 ```
 
@@ -807,7 +725,7 @@ as desired.
 
 Consider our objective function
 \begin{equation*}
-  f(\beta) = \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta\rVert^2_2 + \frac{\lambda_2}{2} \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2
+  f(\beta) = \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta\rVert^2_2 + \frac{\lambda_2}{2} \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2.
 \end{equation*}
 
 To show convexity we wish to show $\nabla^2 f(\beta) \in \mathbb S^{p-1}_+$. However, it's not immediately obvious how to take such a gradient with our fused sum terms $\left(b_j - \beta_{j-1}\right)^2$. One way to get around this is to define vector $B \in \mathbb R^{p-1}$ given by
@@ -817,12 +735,12 @@ To show convexity we wish to show $\nabla^2 f(\beta) \in \mathbb S^{p-1}_+$. How
     \beta_2 - \beta_1 \\
     \vdots \\
     \beta_p - \beta_{p-1}
-  \end{bmatrix}
+  \end{bmatrix}.
 \end{equation*}
 
 Then
 \begin{equation*}
-  \sum^p_{j = 2}\left(\beta_j - \beta_{j - 1}\right)^2 = B^T B 
+  \sum^p_{j = 2}\left(\beta_j - \beta_{j - 1}\right)^2 = B^T B.
 \end{equation*}
 
 In order to achieve our task of expressing the fused sum in terms of the vector $\beta$ we must next decompose $B$ into a product of $\beta$ and some matrix. To this end we define matrix $A \in \mathbb R^{(p-2)\times (p-1)}$ with entries -1 along the main diagonal and 1 along the upper diagonal, i.e.,
@@ -832,31 +750,31 @@ In order to achieve our task of expressing the fused sum in terms of the vector 
     -1 & 1 & 0 & \cdots & 0 & 0 \\
     0 & -1 & 1 & \cdots & 0 & 0 \\
     \vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
-    0 & 0 & 0 & \cdots & -1 & 1 
-  \end{bmatrix}
+    0 & 0 & 0 & \cdots & -1 & 1
+  \end{bmatrix}.
 \end{equation*}
 
 Then
 \begin{align*}
   \sum^p_{j = 2} \left(\beta_j - \beta_{j - 1}\right)^2 &= B^T B \\
   &= \beta^T A^T A \beta \\
-  &\equiv \lVert A\beta\rVert^2_2
+  &\equiv \lVert A\beta\rVert^2_2.
 \end{align*}
 
 Therefore, our objective function can be expressed as
 \begin{align*}
   f(\beta) &= \frac{1}{2}\lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda_1}{2}\lVert \beta \rVert^2_2 + \frac{\lambda_2}{2}\lVert A \beta \rVert^2_2 \\
-  &\equiv \frac{1}{2} \tilde Y^T \tilde Y - \beta^T \tilde X^T \tilde Y + \frac{1}{2} \beta^T \tilde X^T \tilde X \beta + \frac{\lambda_1}{2}\beta^T \beta + \frac{\lambda_2}{2}\beta^T A^T A \beta
+  &\equiv \frac{1}{2} \tilde Y^T \tilde Y - \beta^T \tilde X^T \tilde Y + \frac{1}{2} \beta^T \tilde X^T \tilde X \beta + \frac{\lambda_1}{2}\beta^T \beta + \frac{\lambda_2}{2}\beta^T A^T A \beta.
 \end{align*}
 
 Hence
 \begin{equation*}
-  \nabla f(\beta) = -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta 
+  \nabla f(\beta) = -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta, 
 \end{equation*}
 
 admitting the Hessian
 \begin{equation*}
-  \nabla^2 f(\beta) = \tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A 
+  \nabla^2 f(\beta) = \tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A.
 \end{equation*}
 
 Recalling that a matrix multiplied with its transpose must always be positive semi-definite, we find $\tilde X^T X$ and $A^T A$ must be positive semi-definite. Thus, since $\lambda_1 > 0$, we find that our sum $\tilde X^T \tilde X + \lambda_1 \mathbb I_{p-1} + \lambda_2 A^T A = \nabla^2 f(\beta)$ is positive semi-definite, and so $f(\beta)$ must be strictly convex, as desired.
@@ -867,32 +785,32 @@ We first solve for $\hat\beta^{(\lambda_1,\,\lambda_2)}_{-1}$ in (a) by setting 
 \begin{align*}
   0 &= -\tilde X^T \tilde Y + \tilde X^T \tilde X \beta + \lambda_1 \beta + \lambda_2 A^T A \beta \\
   \tilde X^T \tilde Y &= \left( \tilde X^T \tilde X + \lambda_1 \mathbb I_{p - 1} + \lambda_2 A^T A \right) \beta \\
-  \implies \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} &= M \tilde X^T \tilde Y
+  \implies \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} &= M \tilde X^T \tilde Y,
 \end{align*}
 
 where we have set $M = \left( \tilde X^T \tilde X + \lambda_1 \mathbb I_{p - 1} + \lambda_2 A^T A \right)^{-1}$ for brevity. Therefore
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} \right] &= \mathbb E \left[M \tilde X^T \tilde Y \right] \\
   &= M \tilde X^T \mathbb E \left[ \tilde Y \right] \\
-  &= M \tilde X^T \beta_{*,\,-1}
+  &= M \tilde X^T \beta_{*,\,-1},
 \end{align*}
 
 and
 \begin{align*}
   \text{Var}\left( \hat\beta^{(\lambda_1,\,\lambda_2)}_{-1} \right) &= \text{Var}\left( M \tilde X^T Y \right) \\
   &= M \tilde X^T \text{Var} \left( \tilde Y \right) \tilde X M^T \\
-  &= \sigma^2_* M \tilde X^T \tilde X M^T
+  &= \sigma^2_* M \tilde X^T \tilde X M^T,
 \end{align*}
 
 as desired. We now perform our fused ridge simulation study to test the theoretical values with some empirical estimates. We first define our fused ridge coefficient estimation function (as well as functions permitting us to easily compute the theoretical means and variances of the fused ridge problem)
 ```{r}
 fused_ridge_coef <- function(X, y, lam1, lam2) {
   n <- nrow(X); p <- ncol(X)
-  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
   
-  ytilde <- y - mean(y) # center response
-  xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  # remove leading column, find predictor means, center response
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
+  # center each predictor according to its mean
+  Xtilde <- sweep(Xm1, 2, xbar) 
   
   I <- diag(p - 1)
   UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
@@ -905,14 +823,16 @@ fused_ridge_coef <- function(X, y, lam1, lam2) {
   return(list(b0 = b0, b = b))
 }
 fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
-  # omits intercept term b0
-  # returns theoretical means and variances for the fused ridge problem
+  # Returns theoretical means and variances for the fused ridge problem
+  # Note: Omits intercept term b0
   n <- nrow(X); p <- ncol(X)
-  Xm1 <- X[,-1] # remove leading column of 1's marking the intercept
-  betam1 <- beta[-1] # remove intercept term
   
-  xbar <- colMeans(Xm1) # find predictor means
-  Xtilde <- sweep(Xm1, 2, xbar) # center each predictor according to its mean
+  # remove leading column, remove intercept 
+  Xm1 <- X[,-1]; betam1 <- beta[-1]
+  # find predictor means, center response
+  xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
+  # center each predictor according to its mean
+  Xtilde <- sweep(Xm1, 2, xbar) 
   
   I <- diag(p - 1)
   UD <- cbind(rep(0, p - 2), diag(p - 2)) # upper diagonal matrix
@@ -933,8 +853,7 @@ fused_ridge_coef_params <- function(X, lam1, lam2, beta, sigma) {
 }
 ```
 
-We now simulate some data to test our estimates:
-
+We now simulate some data to test our estimates
 ```{r}
 set.seed(124)
 
@@ -977,7 +896,7 @@ round(b, 4)
 round(abs(vcv_true - vcv_hat), 4) 
 ```
 
-As a case study, we may look at the simulations of $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ and compare it with it's theoretical distribution. Note that the estimates $\hat\beta^{(\lambda_1,\,\lambda_2)} = M\tilde X^T \tilde Y$ are normally distributed because they are a linear combination of $\tilde Y \sim \mathcal N(\tilde X\beta, \sigma^2)$ (when our noise terms $\epsilon \sim \mathcal N(0, \sigma^2)$). We visualize the histogram of the $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ simulations with its empirical and theoretical densities overlaid (dashed, solid), along with its expected value (vertical line) below.
+As a final point, we may look at the simulations of $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ and compare it with it's theoretical distribution. Note that the estimates $\hat\beta^{(\lambda_1,\,\lambda_2)} = M\tilde X^T \tilde Y$ are normally distributed because they are a linear combination of $\tilde Y \sim \mathcal N(\tilde X\beta, \sigma^2)$ (when our noise terms $\epsilon \sim \mathcal N(0, \sigma^2)$). We visualize the histogram of the $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ simulations with its empirical and theoretical densities overlaid (dashed, solid), along with its expected value (vertical line) below.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 5.5, echo = F}
 i <- 2
@@ -993,164 +912,4 @@ z <- dnorm(x, mean = b_true[i], sd = sqrt(vcv_true[i, i]))
 lines(z ~ x, lwd = 2)
 lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
 ```
-
-
-<!-- \newpage -->
-<!-- # Appendix -->
-
-<!-- ## Computing $\mathbb E \left[ \hat\beta^{(\lambda)} \right]$ -->
-
-<!-- Consider the case of $n >> p$ -->
-
-<!-- ```{r} -->
-<!-- library(microbenchmark) -->
-<!-- set.seed(124) -->
-
-<!-- #===== Large n case =====# -->
-<!-- # parameters -->
-<!-- n <- 1e2 -->
-<!-- p <- 1e1 -->
-<!-- lam <- 1 -->
-
-<!-- # generate data -->
-<!-- beta <- rnorm(p) -->
-<!-- X <- matrix(rnorm(n * p), nrow = n) -->
-<!-- I <- diag(p) -->
-
-<!-- # define functions  -->
-<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
-<!-- f2 <- function() { -->
-<!--   X_svd <- svd(X) -->
-<!--   V <- X_svd$v -->
-<!--   d <- X_svd$d -->
-<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
-<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
-<!-- } -->
-
-<!-- # test speed -->
-<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
-<!-- ``` -->
-
-<!-- and the case for $p >> n$ -->
-<!-- ```{r} -->
-<!-- #===== Large p case =====# -->
-<!-- # parameters -->
-<!-- n <- 1e1 -->
-<!-- p <- 1e2 -->
-<!-- lam <- 1 -->
-
-<!-- # generate data -->
-<!-- beta <- rnorm(p) -->
-<!-- X <- matrix(rnorm(n * p), nrow = n) -->
-<!-- I <- diag(p) -->
-
-<!-- # define functions  -->
-<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
-<!-- f2 <- function() { -->
-<!--   X_svd <- svd(X) -->
-<!--   V <- X_svd$v -->
-<!--   d <- X_svd$d -->
-<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
-<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
-<!-- } -->
-
-<!-- # test speed -->
-<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
-<!-- ``` -->
-
-<!-- and $n \approx p$ -->
-<!-- ```{r} -->
-<!-- #===== n ~ p case =====# -->
-<!-- # parameters -->
-<!-- n <- 1e2 -->
-<!-- p <- 1e2 -->
-<!-- lam <- 1 -->
-
-<!-- # generate data -->
-<!-- beta <- rnorm(p) -->
-<!-- X <- matrix(rnorm(n * p), nrow = n) -->
-<!-- I <- diag(p) -->
-
-<!-- # define functions  -->
-<!-- f1 <- function() solve(crossprod(X) + lam * I) %*% (crossprod(X) %*% beta) -->
-<!-- f2 <- function() { -->
-<!--   X_svd <- svd(X) -->
-<!--   V <- X_svd$v -->
-<!--   d <- X_svd$d -->
-<!--   Dstar <- diag(d^2/(d^2 + lam)) -->
-<!--   V %*% (Dstar %*% crossprod(V, beta)) -->
-<!-- } -->
-
-<!-- # test speed -->
-<!-- microbenchmark(f1(), f2(), times = 1e3, unit = "us") -->
-<!-- ``` -->
-
-
-<!-- ## Matrix Multiplication Timing -->
-
-<!-- Consider the following matrix multiplication benchmarks (for the cases of $n >> p$ and $p >> n$). -->
-
-<!-- ```{r} -->
-<!-- set.seed(124) -->
-<!-- #===== Large n case =====# -->
-
-<!-- # set parameters -->
-<!-- n <- 1e3 -->
-<!-- p <- 1e2 -->
-<!-- lam <- 1 -->
-
-<!-- # generate data -->
-<!-- X <- matrix(rnorm(n * p), nrow = n) -->
-<!-- beta <- rnorm(p) -->
-<!-- eps <- rnorm(n) -->
-<!-- y <- X %*% beta + eps -->
-
-<!-- ytilde <- y - mean(y) -->
-<!-- xbar <- colMeans(X) -->
-<!-- Xtilde <- sweep(X, 2, xbar) -->
-
-<!-- # compute decomposition -->
-<!-- Xtilde_svd <- svd(Xtilde) -->
-<!-- U <- Xtilde_svd$u -->
-<!-- d <- Xtilde_svd$d -->
-<!-- V <- Xtilde_svd$v -->
-<!-- Dstar <- diag(d/(d^2 + lam)) -->
-
-<!-- # define multiplication functions -->
-<!-- f1 <- function() V %*% Dstar %*% t(U) %*% ytilde -->
-<!-- f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde) -->
-<!-- f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde)) -->
-<!-- f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde)) -->
-<!-- f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde)) -->
-
-<!-- # test speed -->
-<!-- microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us") -->
-<!-- ``` -->
-
-<!-- ```{r} -->
-<!-- #===== Large p case =====# -->
-<!-- set.seed(124) -->
-
-<!-- # set parameters -->
-<!-- n <- 1e2 -->
-<!-- p <- 1e3 -->
-<!-- lam <- 1 -->
-
-<!-- # generate data -->
-<!-- X <- matrix(rnorm(n * p), nrow = n) -->
-<!-- beta <- rnorm(p) -->
-<!-- eps <- rnorm(n) -->
-<!-- y <- X %*% beta + eps -->
-
-<!-- # define multiplication functions -->
-<!-- f1 <- function() V %*% Dstar %*% t(U) %*% ytilde -->
-<!-- f2 <- function() V %*% Dstar %*% (t(U) %*% ytilde) -->
-<!-- f3 <- function() V %*% (Dstar %*% (t(U) %*% ytilde)) -->
-<!-- f4 <- function() V %*% (Dstar %*% crossprod(U, ytilde)) -->
-<!-- f5 <- function() V %*% crossprod(Dstar, crossprod(U, ytilde)) -->
-
-<!-- # test speed -->
-<!-- microbenchmark(f1(), f2(), f3(), f4(), f5(), times = 100, unit = "us") -->
-<!-- ``` -->
-
 
