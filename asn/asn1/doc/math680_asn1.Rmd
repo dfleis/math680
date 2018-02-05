@@ -32,9 +32,9 @@ Therefore, if $\hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T \in 
   \hat\beta_1 = \bar Y - \bar x^T \hat\beta_{-1},
 \end{equation*}
 
-then $\hat\beta$ also solves the uncentered problem
+then $\hat\beta$ must also solve the uncentered problem
 \begin{equation*}
-  \hat \beta \equiv \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T = \underset{\beta\in\mathbb R^p}{\text{arg min}}~\lVert Y - X \beta \rVert^2_2,
+  \hat \beta = \left(\hat \beta_1,\, \hat\beta_{-1}^T\right)^T = \underset{\beta\in\mathbb R^p}{\text{arg min}}~\lVert Y - X \beta \rVert^2_2,
 \end{equation*}
 
 as desired.
@@ -60,12 +60,12 @@ as desired.
 
 ## (b)
 
-The Hessian $\nabla^2 f(\beta)$ is given by the second order gradient
+The Hessian $\nabla^2 f(\beta)$ is given by the $(p-1) \times (p-1)$ matrix
 \begin{equation*}
   \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1},
 \end{equation*}
 
-where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ (positive semi-definite) and, for $\lambda > 0$, we have $2\lambda\mathbb I_{p - 1}\in \mathbb S^{p - 1}_{++}$ (positive definite). Therefore, for all nonzero vectors $v \in \mathbb R^{p - 1}$,
+where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2\tilde X^T \tilde X \in \mathbb S^{p-1}_+$ (positive semi-definite) and, for $\lambda > 0$, we have $2\lambda\mathbb I_{p - 1}\in \mathbb S^{p - 1}_{++}$ (positive definite).[^1] Therefore, for all nonzero vectors $v \in \mathbb R^{p - 1}$,
 \begin{align*}
   v^T \left( \nabla^2 f(\beta) \right) v &= v^T \left( 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \right) v \\
   &= 2 v^T \tilde X^T \tilde X v + 2\lambda v^T \mathbb I_{p - 1} v \\
@@ -73,30 +73,32 @@ where $\mathbb I_{p-1}$ is the $(p-1)\times (p-1)$ identity matrix. Note that $2
   &> 0.
 \end{align*}
 
+[^1]: Proof in an appendix.
+
 Hence,
 \begin{equation*}
 \nabla^2 f(\beta) = 2\tilde X^T \tilde X + 2\lambda \mathbb I_{p-1} \in \mathbb S^{p - 1}_{++},
 \end{equation*}
 
-and so $f$ must be strictly convex in $\beta$, as desired.
+and so, since the Hessian of $f$ is positive definite, $f$ must be strictly convex in $\beta$, as desired.
 
 ## (c)
 
-Suppose a strictly convex function $f$ is globally minimized at distinct points $x$ and $y$. By definition of strict convexity
+Suppose a strictly convex function $f$ is globally minimized at distinct points $x$ and $y$, $x \neq y$. By definition of strict convexity
 \begin{equation*}
   \forall\,t\in (0, 1) \quad f(tx + (1-t)y) < tf(x) + (1-t)f(y).
 \end{equation*}
 
-Then, since $f$ is minimized at both $x$ and $y$, we have $f(x) = f(y)$, hence
+Then, since $f$ is minimized at both $x$ and $y$, we have $f(x) = f(y)$. Hence,
 \begin{equation*}
   f(tx + (1-t)y) < tf(x) + (1-t)f(x) = f(x).
 \end{equation*}
 
-However, this implies that the point $z = tx + (1 - t)y$ admits a value of $f$ even *smaller* than at $x$, contradicting our assumption that $x$ is a global minimizer. This permits us to conclude that strict convexity implies a unique global minimizer. Hence, for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
+However, this implies that the point $z = tx + (1 - t)y$ admits a value of $f$ even *smaller* than $f(x)$, contradicting our assumption that $x$ is a global minimizer. Therefore, we may conclude that strict convexity implies a unique global minimizer. That is, for $\lambda > 0$, we are guaranteed that the above solution will be the unique solution to our penalized least squares problem.
 
 ## (d)
 
-To write our desire function we first set $\nabla f(\beta) = 0$,
+To write our desired function we first solve $\nabla f(\beta) = 0$ for $\beta$, i.e.,
 \begin{equation*}
   \hat\beta^{(\lambda)}_{-1} = \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y.
 \end{equation*}
@@ -106,24 +108,30 @@ For the purpose of computational efficiency we make use of the singular value de
   \tilde X = U D V^T,
 \end{equation*}
 
-for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal and zero elsewhere. Hence,
+for $U \in \mathbb R^{n\times n}$ and $V \in \mathbb R^{(p-1)\times (p-1)}$ both orthogonal matrices, $U^TU = \mathbb I_n$, $V^TV = \mathbb I_{p-1}$, and $D \in \mathbb R^{n\times (p-1)}$ a diagonal matrix with entries $\left\{d_{j}\right\}_{j = 1}^{\min(n,\,p-1)}$ along the main diagonal and zero elsewhere. Therefore,
 \begin{align*}
   \hat\beta^{(\lambda)}_{-1} &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \\
   &= \left(\left(UDV^T\right)^T UDV^T + \lambda V V^T\right)^{-1} \left(UDV^T\right)^T \\
   &= V\left(D^TD + \lambda \mathbb I_{p- 1} \right)^{-1} D^TU^T \tilde Y.
 \end{align*}
 
-Note that $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}D^T$ is diagonal with entries $\frac{d_j}{d^2_j + \lambda}$, $j = 1, ..., p - 1$. We exploit this to avoid performing an explicit matrix inversion in our function.
+Note that $\left(D^TD + \lambda \mathbb I_{p- 1}\right)^{-1}D^T$ is diagonal with entries $\frac{d_j}{d^2_j + \lambda}$, $j = 1, ..., p - 1$. We exploit this to avoid performing explicit matrix inversions in the function below.
 
 ```{r}
 ridge_coef <- function(X, y, lam) {
   # Commented-out scaling parameters represent the transformations
   # used to make the output identical to that of 
   # coef(MASS::lm.ridge(y ~ X[,-1], lambda = lam))
-  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y)
+  # (left for personal notes)
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ybar <- mean(y)
   
-  # center each predictor according to its mean
-  Xtilde <- (Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar)) # * sqrt(n/(n - 1))
+  # center response and each predictor according to their means
+  ytilde <- y - ybar
+  Xtilde <- (Xm1 - tcrossprod(rep(1, nrow(Xm1)), xbar)) #* sqrt(n/(n - 1))
+  
+  # # standardize Xtilde
+  # xsds <- apply(Xm1, 2, sd) 
+  # Xtilde <- sweep(Xtilde, 2, STATS = xsds, FUN = "/")
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
@@ -133,8 +141,8 @@ ridge_coef <- function(X, y, lam) {
   Dstar <- diag(d/(d^2 + lam))
   
   # compute ridge coefficients
-  b <- V %*% (Dstar %*% crossprod(U, ytilde)) # * 1/xbar * sqrt(n/(n - 1))
-  b1 <- mean(y) - crossprod(xbar, b) 
+  b <- V %*% (Dstar %*% crossprod(U, ytilde)) #* 1/xsds * sqrt(n/(n - 1))
+  b1 <- ybar - crossprod(xbar, b) 
   list(b1 = b1, b = b)
 }
 ```
@@ -149,14 +157,14 @@ We first take the expectation of $\hat\beta^{(\lambda)}_{-1}$
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1}.
 \end{align*}
 
-Once again using the SVD of $\tilde X$, we produce a more elegant expression
+We may produce a more elegant expression by once again using the SVD of $\tilde X$
 \begin{align*}
   \mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right] &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \beta_{-1}  \\
   &= V \left(D^T D + \lambda \mathbb I_{p - 1}\right)^{-1} D^T D V^T \beta_{-1} \\
   &= V D^* V^T \beta_{-1},
 \end{align*}
 
-where $D^*$ is a diagonal matrix with entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We next take the he variance of our centered ridge estimates 
+where $D^*$ is a diagonal matrix with entries $\left\{ \frac{d^2_j}{d^2_j + \lambda} \right\}^{\min \left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We next take the he variance of our centered ridge estimates,
 \begin{align*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) &= \text{Var} \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde Y \right) \\
   &= \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \text{Var} \left( \tilde Y \right) \left( \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \right)^T \\
@@ -164,14 +172,17 @@ where $D^*$ is a diagonal matrix with entries $\left\{ \frac{d^2_j}{d^2_j + \lam
   &= \sigma^2_* \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1} \tilde X^T \tilde X \left(\tilde X^T \tilde X + \lambda \mathbb I_{p - 1}\right)^{-1}
 \end{align*}
 
-Again applying the SVD of $\tilde X$, we find the more concise expression
+Again applying the SVD of $\tilde X$, we find a more concise expression
 \begin{equation*}
   \text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right) = V D^{**} V^T,
 \end{equation*}
 
-where $D^{**}$ is a diagonal matrix with entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We now perform a simulation study to compare sample estimates with their theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. We first define functions computing the theoretical mean and variance according to our above expressions.
+where $D^{**}$ is a diagonal matrix with entries $\left\{ \frac{d_j^2}{\left(d_j^2 + \lambda\right)^2}\right\}^{\min\left(n, p - 1\right)}_{j = 1}$ along the main diagonal and zero elsewhere. We now perform a simulation study to compare some sample estimates of the mean and variance with their theoretical values $\mathbb E \left[ \hat\beta^{(\lambda)}_{-1} \right]$ and $\text{Var} \left( \hat\beta^{(\lambda)}_{-1} \right)$. We first define functions computing these quantities according to the above expressions,
 ```{r}
 ridge_coef_true <- function(X, lam, beta, sigma) {
+  # Computes the expectation and variance of ridge coefficients
+  # given design matrix X, penalty lam, OLS estimates beta,
+  # and OLS error standard deviation sigma
   n <- nrow(X); p <- ncol(X)
   betam1 <- beta[-1]; Xm1 <- X[,-1]; xbar <- colMeans(Xm1) 
   
@@ -180,13 +191,13 @@ ridge_coef_true <- function(X, lam, beta, sigma) {
   
   # compute theoretical expectation and variance/covariance matrix
   inv <- solve(crossprod(Xtilde) + lam * diag(p - 1))
-  b <- inv %*% (crossprod(Xtilde) %*% betam1)
-  vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv
+  b <- inv %*% (crossprod(Xtilde) %*% betam1) # expectation
+  vcv <- sigma^2 * inv %*% crossprod(Xtilde) %*% inv # variance
   list(b = b, vcv = vcv)
 }
 ```
 
-We may now perform our simulation.
+We may now perform our simulation,
 ```{r}
 set.seed(124)
 
@@ -203,16 +214,19 @@ X <- cbind(1, matrix(rnorm(n * (p - 1)), nrow = n))
 
 # compute theoretical mean and variance
 true_vals <- ridge_coef_true(X, lam, beta_star, sigma_star)
-b_true <- as.vector(true_vals$b)
-vcv_true <- true_vals$vcv
+b_true <- as.vector(true_vals$b) # extract expectation
+vcv_true <- true_vals$vcv # extract variance
 
 # simulate ridge coefficients nsims times
-# outputs a matrix with rows corresponding to coefficients
-# and columns correspond to simulation number
+# outputs a matrix with row indices corresponding 
+# to coefficient indices and column indices 
+# corresponding to simulation number
 pt <- proc.time()
 b_hat <- replicate(nsims, {
+  # generate responses
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  as.vector(ridge_coef(X, y, lam)$b)
+  # extract, vectorize, and return coefficients, excluding intercept
+  as.vector(ridge_coef(X, y, lam)$b) 
 })
 proc.time() - pt
 
@@ -222,37 +236,43 @@ vcv_hat <- var(t(b_hat))
 # print estimated values vs. expected values
 b <- rbind(rowMeans(b_hat), b_true, abs(rowMeans(b_hat) - b_true))
 rownames(b) <- c("b_hat", "b_true", "abs_err")
-round(b, 4)
+round(b, 5)
 
 # print absolute error between estimated and true variances
-round(abs(vcv_true - vcv_hat), 4) 
+round(abs(vcv_true - vcv_hat), 5) 
 ```
 
-We see that the empirical sample estimates are very close to their theoretical values, as expected.
+Based on our simulation we find that the empirical sample estimates are very close to their theoretical values, as expected.
 
 # Question 3
 
-Note that for the purpose of improved performance we *do not* call our previous `ridge_coef` function. Calling our previous implementation would compute the SVD for each value of $\lambda$. This is unnecessary since the SVD of $\tilde X$ is independent of $\lambda$. Instead, we perform the SVD prior to separating the vector of tuning parameters $\left\{ \lambda_i \right\}^L_{i = 1}$.
+Note that for the purpose of improved performance we *do not* call our `ridge_coef()` function as was defined above. Calling this implementation would compute the SVD for each value of $\lambda$. All else constant, this is unnecessary since the SVD of $\tilde X$ is independent of $\lambda$. Instead, we perform the SVD prior to separating the vector of $\lambda$'s, and compute the ridge estimate using the SVD outputs as a (constant) argument across all $\lambda$'s.
 ```{r}
 ridge_cv <- function(X, y, lam.vec, K) {
-  # perform K-fold cross-validation on the ridge regression 
-  # estimation problem over tuning parameters given in lam.vec
+  # Perform K-fold cross-validation on the ridge regression 
+  # estimation problem over tuning parameters given in lam.vec.
   n <- nrow(X); p <- ncol(X); L <- length(lam.vec)
   
-  # groups to cross-validate over
+  # evenly assign a group from 1,..,K to each row index 1,...,n 
   folds <- cut(1:n, breaks = K, labels = F)
+  # even though our data will be randomly generated, for later
+  # portability, shuffle the cross-validation groups randomly
+  folds <- sample(folds)
+  
   # get indices of training subset
   train_idxs <- lapply(1:K, function(i) !(folds %in% i))
   
-  # preallocate empty data structure to store our CV errors 
-  # for each lambda & fold
-  cv_errs_lams_folds <- matrix(0, nrow = L, ncol = K)
+  # CV errors
+  # row index = lambda index
+  # col index = fold index
+  cv_errs_lams_folds <- matrix(NA, nrow = L, ncol = K)
   cv_errs_lams_folds <- sapply(train_idxs, function(trn_idx) {
     tst_idx <- !trn_idx # find test subset indices
     
-    # subset data and remove intercept column in the design matrix
-    Xm1_trn <- X[trn_idx, -1]; y_trn <- y[trn_idx] 
-    xbar_trn <- colMeans(Xm1_trn); ytilde_trn <- y_trn - mean(y_trn) 
+    # extract training data, remove intercept column
+    Xm1_trn <- X[trn_idx, -1]; y_trn <- y[trn_idx];
+    ybar_trn <- .Internal(mean(y_trn))
+    xbar_trn <- colMeans(Xm1_trn); ytilde_trn <- y_trn - ybar_trn
 
     # center each predictor according to its mean
     Xtilde_trn <- Xm1_trn - tcrossprod(rep(1, nrow(Xm1_trn)), xbar_trn) 
@@ -265,15 +285,14 @@ ridge_cv <- function(X, y, lam.vec, K) {
     U <- Xtilde_trn_svd$u; d <- Xtilde_trn_svd$d; V <- Xtilde_trn_svd$v
     d2 <- d^2
     
-    # preallocate empty data structure to store CV errors 
-    # for each value of lambda
+    # CV errors for each value of lambda
     cv_errs_lams <- vector(mode = 'numeric', length = L)
     cv_errs_lams <- sapply(lam.vec, function(lam) {
       # compute the inverse (D^T D + lambda I_{p-1})^{-1} D^T
       Dstar <- diag(d/(d2 + lam))
       # compute ridge coefficients
       b_trn <- V %*% (Dstar %*% crossprod(U, ytilde_trn)) 
-      b1_trn <- mean(y_trn) - crossprod(xbar_trn, b_trn)
+      b1_trn <- ybar_trn - crossprod(xbar_trn, b_trn)
       
       # fit test data
       yhat_tst <- X[tst_idx,] %*% c(b1_trn, b_trn)
@@ -283,13 +302,13 @@ ridge_cv <- function(X, y, lam.vec, K) {
     cv_errs_lams
   })
   
-  #  weighted average according to group size (some groups may have 
-  # +/- 1 member depending on whether K can't divide sizes evenly) of
+  # weighted average according to group size of
   # cross validation error for each value of lambda
+  # (some groups may contain +/- 1 member 
+  # depending on whether or not K divides n evenly)
   cv.error <- apply(cv_errs_lams_folds, 1, 
                     function(cv_errs_folds) {
-                      sum(cv_errs_folds * tabulate(folds))
-                    })/n
+                      sum(cv_errs_folds * tabulate(folds))}) / n
   
   # extract the optimal value of our tuning parameter lambda
   # and (re)compute the corresponding coefficient estimates
@@ -303,14 +322,14 @@ ridge_cv <- function(X, y, lam.vec, K) {
 
 # Question 4
 
-For this problem we first set some global libraries/functions
+For this problem we first define some global functions
 ```{r, message = F}
 library(doParallel)
 
 rmvn <- function(n, p, mu = 0, S = diag(p)) {
-  # generates n (potentially correlated) p-dimensional normal deviates
+  # Generates n (potentially correlated) p-dimensional normal deviates
   # given mean vector mu and variance-covariance matrix S
-  # NOTE: S must be a positive-semidefinite matrix
+  # NOTE: S must be a positive semi-definite matrix
   Z <- matrix(rnorm(n * p), nrow = n, ncol = p) # generate iid normal deviates
   C <- chol(S)
   mu + Z %*% C # compute our correlated deviates
@@ -320,9 +339,8 @@ loss2 <- function(X, beta, b) sum((X %*% (beta - b))^2, na.rm = T)
 se <- function(x) sd(x)/sqrt(length(x))
 ```
 
-and global parameters which remain constant across (a)-(d)
+and global parameters remaining constant across (a)-(d)
 ```{r}
-library(mvtnorm)
 set.seed(680)
 
 # global parameters
@@ -339,6 +357,12 @@ names(coef_list) <- c("OLS", "K5", "K10", "Kn")
 
 ## (a)
 
+\begin{align*}
+  n &= 100 \\
+  p &= 50 \\
+  \theta &= 0.5
+\end{align*}
+
 ```{r}
 # set parameters
 p <- 50
@@ -354,17 +378,17 @@ pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  
+
   # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-  
+
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv_out <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv_out$b1, rcv_out$b))
   })
-  
+
   # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
@@ -388,6 +412,12 @@ round(sim_se, 4)
 
 ## (b)
 
+\begin{align*}
+  n &= 100 \\
+  p &= 50 \\
+  \theta &= 0.9
+\end{align*}
+
 ```{r}
 # set parameters
 p <- 50
@@ -403,17 +433,17 @@ pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  
+
   # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-  
+
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv_out <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv_out$b1, rcv_out$b))
   })
-  
+
   # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
@@ -437,6 +467,12 @@ round(sim_se, 4)
 
 ## (c)
 
+\begin{align*}
+  n &= 100 \\
+  p &= 200 \\
+  \theta &= 0.5
+\end{align*}
+
 ```{r}
 # set parameters
 p <- 200
@@ -452,17 +488,17 @@ pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  
+
   # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-  
+
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv_out <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv_out$b1, rcv_out$b))
   })
-  
+
   # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
@@ -486,6 +522,12 @@ round(sim_se, 4)
 
 ## (d)
 
+\begin{align*}
+  n &= 100 \\
+  p &= 200 \\
+  \theta &= 0.9
+\end{align*}
+
 ```{r}
 # set parameters
 p <- 200
@@ -496,17 +538,17 @@ pt <- proc.time(); registerDoParallel(cores = 4)
 sim <- foreach(1:nsims, .combine = cbind) %dopar% {
   # generate response
   y <- X %*% beta_star + rnorm(n, 0, sigma_star)
-  
+
   # compute OLS estimates (lambda = 0)
   ols_fit <- ridge_coef(X, y, 0)
   coef_list[[1]] <- c(ols_fit$b1, ols_fit$b)
-  
+
   # compute the cross-validated ridge estimates for each K
   coef_list[2:(length(Ks) + 1)] <- sapply(Ks, function(k) {
     rcv_out <- ridge_cv(X, y, lam.vec = lams, K = k)
     list(coefs = c(rcv_out$b1, rcv_out$b))
   })
-  
+
   # compute losses
   l1 <- sapply(coef_list, function(b) loss1(beta_star, b))
   l2 <- sapply(coef_list, function(b) loss2(X, beta_star, b))
@@ -548,31 +590,31 @@ as desired.
 
 ## (b)
 
-We first consider the objective function in terms of $\beta$. We find the Hessian with respect to $\beta$
+We first consider the convexity of $g$ with respect to $\beta$. The corresponding Hessian is given by
 \begin{align*}
   \nabla^2_{\beta} g\left(\beta,\sigma^2\right) &= \nabla^2_{\beta} \left( \frac{n}{2} \log \sigma^2+ \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
   &= \nabla_{\beta} \left( \frac{1}{\sigma^2} \tilde X^T \left( -\tilde Y + \tilde X \beta \right) + \lambda \beta \right) \\
   &= \tilde X^T \tilde X + \lambda \mathbb I_{p - 1}.
 \end{align*}
 
-The symmetric matrix $\tilde X^T \tilde X$ will always positive semi-definite, and for $\lambda \geq 0$, $\lambda \mathbb I_{p - 1}$ will also be positive semi-definite (and strictly positive definite when $\lambda > 0$). Thus, the Hessian with respect to $\beta$ must be positive semi-definite
+As before, the symmetric matrix $\tilde X^T \tilde X$ will always positive semi-definite, and for $\lambda \geq 0$, the diagonal matrix $\lambda \mathbb I_{p - 1}$ must also be positive semi-definite (and positive definite when $\lambda > 0$). Thus, the Hessian with respect to $\beta$ must be positive semi-definite
 \begin{equation*}
   \nabla^2_{\beta} g\left(\beta,\sigma^2\right) = \tilde X^T \tilde X + \lambda \mathbb I_{p - 1} \in \mathbb S^{p - 1}_+,
 \end{equation*}
 
-and so our objective function $g \left(\beta, \sigma^2\right)$ is convex in $\beta$. Next, we seek the Hessian of $g$ with respect to $\sigma^2$,
+and positive definite when $\lambda > 0$. Therefore, our objective function $g \left(\beta, \sigma^2\right)$ is convex in $\beta$. Next, we seek the Hessian of $g$ with respect to $\sigma^2$,
 \begin{align*}
   \nabla^2_{\sigma^2} g\left(\beta,\sigma^2\right) &= \nabla^2_{\sigma^2} \left( \frac{n}{2} \log \sigma^2+ \frac{1}{2\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2 + \frac{\lambda}{2} \lVert \beta \rVert^2_2 \right) \\
   &= \nabla_{\sigma^2} \left( \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2 \right) \\
   &= -\frac{n}{2\sigma^4} + \frac{1}{\sigma^6} \lVert \tilde Y - \tilde X \beta \rVert^2_2.
 \end{align*}
 
-For $g$ to be convex in $\sigma^2$ we require $\nabla^2_{\sigma^2} g\left(\beta,\sigma^2\right) \geq 0$. However, such a condition is equivalent to
+For $g$ to be convex in $\sigma^2$ we require $\nabla^2_{\sigma^2} g\left(\beta,\sigma^2\right) \geq 0$. However, some algebra informs us that such a condition is equivalent to
 \begin{equation*}
-  n \geq \frac{2}{\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2,
+  n \geq \frac{2}{\sigma^2} \lVert \tilde Y - \tilde X \beta \rVert^2_2.
 \end{equation*}
 
-and as a counterexample consider the following data
+As a counterexample of this inequality, consider the following data
 ```{r}
 set.seed(124)
 n <- 4
@@ -587,7 +629,7 @@ ytilde <- Xtilde %*% beta + rnorm(n)
 n >= rhs
 ```
 
-and so it is not the case that $\nabla^2_{\sigma^2} g\left(\beta,\sigma^2\right)$ is (always) nonnegative, implying that our objective function $g\left(\beta,\sigma^2\right)$ is *not* convex in $\sigma^2$.
+and so it is *not* the case that $\nabla^2_{\sigma^2} g\left(\beta,\sigma^2\right)$ is (always) nonnegative, implying that our objective function $g\left(\beta,\sigma^2\right)$ is not convex in $\sigma^2$.
 
 ## (c)
 
@@ -596,7 +638,7 @@ Let $\bar\beta$ be a solution to our maximum likelihood ridge estimation problem
   \tilde Y - \tilde X \bar \beta = 0.
 \end{equation*}
 
-Since $\bar\beta$ is a solution it must satisfy our first order condition
+Since $\bar\beta$ is a solution it must satisfy the first order condition (with respect to $\beta$)
 \begin{equation*}
  \nabla_\beta g(\beta,\sigma^2) = \frac{1}{\sigma^2} \left( -\tilde X^T \tilde Y +  \tilde X^T \tilde X \beta \right) + \lambda \beta = 0 \iff \frac{1}{\sigma^2} \left( \tilde X^T \left( - \tilde Y + \tilde X \beta \right) \right) + \lambda \beta = 0.
 \end{equation*}
@@ -611,13 +653,13 @@ Thus, for such a solution $\bar\beta$ and $\lambda > 0$,
 
 Similarly, using our second first order condition $\nabla_{\sigma^2} g(\beta,\sigma^2) = 0$, at $\beta = \bar\beta$,
 \begin{align*}
-  \nabla_{\sigma^2} g(\beta,\sigma^2) &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
+  0 = \nabla_{\sigma^2} g(\beta,\sigma^2) &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \beta \rVert^2_2 \\
   &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde X \bar\beta \rVert^2_2 \\
   &= \frac{n}{2\sigma^2} - \frac{1}{2\sigma^4} \lVert \tilde Y - \tilde Y \rVert^2_2 \\
-  &= \frac{n}{2\sigma^2} = 0 
+  &= \frac{n}{2\sigma^2} 
 \end{align*}  
 
-This conditions implies that either $n = 0$ or $\sigma^2 \to \infty$. Thus, no such global minimizer could exist.
+This conditions enforces either $n = 0$ or $\sigma^2 \to \infty$. Thus, no such global minimizer could exist.
 
 ## (d)
 
@@ -657,17 +699,19 @@ Our function is as follows
 
 ```{r}
 ridge_coef_mle <- function(X, y, lam, tol = 1e-16) {
+  # Compute ML estimates of ridge coefficients with penalty lam
   
-  # remove leading column, find predictor means, center response
-  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
-  # center each predictor according to its mean
+  # remove leading column, find means
+  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ybar <- mean(y)
+  # center response and predictors according to their means
+  ytilde <- y - ybar
   Xtilde <- sweep(Xm1, 2, xbar) 
   
   # compute the SVD on the centered design matrix
   Xtilde_svd <- svd(Xtilde)
   U <- Xtilde_svd$u; d <- Xtilde_svd$d; V <- Xtilde_svd$v
   
-  ## generate some initial guess for sigma and beta
+  # generate some initial guess for sigma and beta
   sig0 <- rexp(1)
   Dstar <- diag(d/(d^2 + sig0^2 * lam))
   b0 <- V %*% (Dstar %*% crossprod(U, ytilde)) 
@@ -681,17 +725,19 @@ ridge_coef_mle <- function(X, y, lam, tol = 1e-16) {
     
     if (abs(sig_new^2 - sig0^2) < tol)
       break
-    
     sig0 <- sig_new; b0 <- b_new; i <- i + 1
   }
+  
   list(niter = i, sigma = as.numeric(sig_new), b = b_new)
 } 
 grad_mle <- function(X, y, lam, b, s) {
-  n <- nrow(X)
+  # Compute the gradient of our (unconstrained) ridge 
+  # objective function 
   
-  # remove leading column, find predictor means, center response
-  Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ytilde <- y - mean(y) 
-  # center each predictor according to its mean
+  # remove leading column, find means
+  n <- nrow(X); Xm1 <- X[,-1]; xbar <- colMeans(Xm1); ybar <- mean(y)
+  # center response and predictors according to their means
+  ytilde <- y - ybar
   Xtilde <- sweep(Xm1, 2, xbar) 
   
   gb <- 1/s^2 * crossprod(Xtilde, Xtilde %*% b - ytilde) + lam * b
@@ -849,7 +895,7 @@ We now simulate some data to test our estimates
 set.seed(124)
 
 # set parameters
-nsims <- 1e4
+nsims <- 1e3
 n <- 1e2
 p <- 5
 lam1 <- 1; lam2 <- 1; 
@@ -886,7 +932,7 @@ round(b, 4)
 round(abs(vcv_true - vcv_hat), 4) 
 ```
 
-As a final point, we may look at the simulations of $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ and compare it with it's theoretical distribution. Note that the estimates $\hat\beta^{(\lambda_1,\,\lambda_2)} = M\tilde X^T \tilde Y$ are normally distributed because they are a linear combination of $\tilde Y \sim \mathcal N(\tilde X\beta, \sigma^2)$ (when our noise terms $\epsilon \sim \mathcal N(0, \sigma^2)$). We visualize the histogram of the $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ simulations with its empirical and theoretical densities overlaid (dashed, solid), along with its expected value (vertical line) below.
+As a final point, we may look at the simulations of $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ and compare it with its theoretical distribution. Note that the estimates $\hat\beta^{(\lambda_1,\,\lambda_2)} = M\tilde X^T \tilde Y$ are normally distributed because they are a linear combination of $\tilde Y \sim \mathcal N(\tilde X\beta, \sigma^2)$ (when our noise terms $\epsilon \sim \mathcal N(0, \sigma^2)$). We visualize the histogram of the $\hat\beta^{(\lambda_1,\,\lambda_2)}_2$ simulations with its empirical and theoretical densities overlaid (dashed, solid), along with its expected value (vertical line) below.
 
 ```{r, fig.align = 'center', fig.height = 4, fig.width = 5.5, echo = F}
 i <- 2
@@ -897,9 +943,42 @@ hist(b_hat[i,], breaks = 50, freq = F,
      list(ix = i)))
 abline(v = b_true[i], col = 'red', lwd = 2)
 
-x <- seq(min(b_hat[i,]), max(b_hat[i,]), length.out = 1e3)
+x <- seq(min(b_hat[i,]), max(b_hat[i,]), length.out = 1e2)
 z <- dnorm(x, mean = b_true[i], sd = sqrt(vcv_true[i, i]))
 lines(z ~ x, lwd = 2)
 lines(density(b_hat[i,]), lwd = 2, lty = 'dashed')
 ```
+
+\newpage
+# Appendix
+
+## 2 (b)
+
+**Proposition**: Suppose $X \in \mathbb R^{n\times p}$, then $X^T X$ is positive semi-definite.
+
+**Proof**: Suppose $X$ is a real-valued $n\times p$ matrix and let $v$ be an arbitrary real-valued $p\times 1$ vector. Let $X_i$ denote the $i^\text{th}$ row of $X$. Then,
+\begin{align*}
+  v^T X^T X v &= \left(X v\right)^T \left(X v\right) \\
+  &= \lVert X v \rVert^2_2 \\
+  &= \sum^n_{i = 1} \left( X_i \bullet v \right)^2 \\
+  &\geq 0
+\end{align*}
+
+which satisfies the definition of positive semi-definiteness, as desired.
+
+
+**Proposition**: Let $\mathbb I_p$ be a $p\times p$ identity matrix and $\lambda$ a positive nonzero real number, then $\lambda \mathbb I_p$ is positive definite.
+
+**Proof**: Suppose $\lambda > 0$ and let $v$ be an arbitrary real-valued $p\times 1$ vector. Then,
+\begin{align*}
+  v^T \left(\lambda \mathbb I_p\right) v &= \lambda \left( v^T \mathbb I_p v \right) \\
+  &= \lambda \left( v^T v \right) \\
+  &= \lambda \lVert v \rVert^2_2 \\
+  &= \lambda \sum^p_{i = 1} v_i^2 \\
+  &> 0, \quad \text{when $\lambda > 0$}
+\end{align*}
+
+which satisfies the definition of positive definiteness, as desired.
+
+
 
