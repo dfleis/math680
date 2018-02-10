@@ -1,0 +1,139 @@
+---
+title: "MATH 680: Assignment 2"
+author: "David Fleischer -- 260396047"
+date: "Last Update: `r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+header-includes:
+   - \usepackage{amsmath,amsthm,amssymb,mathtools}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newcommand{\R}{\mathbb R}
+\renewcommand{\S}{\mathbb S}
+
+# Question 1
+
+\begin{proof} Let $C = \left\{ x \in \R^n: Ax \leq b \right\}$ be our set of interest. Let $x, y \in C$, and let $t \in [0, 1]$ be an arbitrary real-valued scalar. Then,
+\begin{align*}
+  A \left( tx + (1 - t)y \right) &= tAx + (1 - t)Ay \\
+  &\leq tb + (1 - tb) \\
+  &= b.
+\end{align*}
+
+Thus,
+$$
+  x, y \in C \implies tx + (1 - t)y \in C, \quad \text{for all } 0 \leq t \leq 1.
+$$
+That is, $C$ is a convex set, as desired.
+\end{proof}
+
+# Question 2
+
+## 2.1
+
+\begin{proof} Recall that a (continuous, twice differentiable) function $f(z)$, $z\in C$, is convex on $C$ if and only if its Hessian is positive semidefinite for all $z$ on the interior of $C$,
+$$
+  \nabla^2 f(z) \in \S^n_+,
+$$
+and strongly convex with parameter $m > 0$ if and only if
+$$
+  \nabla^2 f(z) - m \mathbb I_n \in \S^n_{+}.
+$$
+
+Furthermore, a matrix $M \in \R^{n\times n}$ is positive semidefinite if and only if all eigenvalues of $M$ are nonnegative. Since $f$ is nondifferentiable along $x = 0, y = 0$ we first apply the differentiable approximation $f_\epsilon$
+$$
+  f_\epsilon(x, y) = \sqrt{x^2 + y^2 + \epsilon} + a\left(x^2 + y^2\right) \underset{\epsilon\to 0}{\longrightarrow} |xy| + a\left(x^2 + y^2\right) = f(x, y)
+$$
+Now, $f_\epsilon$ admits gradient 
+$$
+  \nabla f_\epsilon(x, y) = \left(2 a x+\frac{x y^2}{\sqrt{x^2 y^2+\epsilon }},2 a y+\frac{x^2 y}{\sqrt{x^2 y^2+\epsilon }}\right),
+$$
+
+and Hessian
+$$
+  \nabla^2 f_\epsilon(x, y) = \left[
+\begin{array}{cc}
+ -\frac{x^2 y^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{y^2}{\sqrt{x^2 y^2+\epsilon }}+2 a & \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} \\
+ \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} & -\frac{y^2 x^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{x^2}{\sqrt{x^2 y^2+\epsilon }}+2 a \\
+\end{array}
+\right].
+$$
+
+We find $\nabla^2 f_\epsilon(x, y)$ has eigenvalues
+\begin{align*}
+  \lambda_{\epsilon, 1} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }-\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}} \\
+  \lambda_{\epsilon, 2} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }+\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}}.
+\end{align*}  
+
+Taking the limits of $\lambda_{\epsilon,1}$ and $\lambda_{\epsilon,2}$ as $\epsilon \to 0$,
+\begin{align*}
+  \lambda_1 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 1} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}-2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
+  &= 2 a - \frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
+  &= 2a - 1, \\
+  \lambda_2 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 2} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}+2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
+  &= 2 a+\frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
+  &= 2a + 1.
+\end{align*}
+
+In this form we see that $\nabla^2 f(x, y)$ has nonnegative eigenvalues if and only if $a \geq \frac{1}{2}$, and so $f$ is convex for $a \geq \frac{1}{2}$. To show strong convexity, we use the result that if matrix $M$ has eigenvalues $\left\{\lambda_i\right\}^n_{i = 1}$ then $M - k \mathbb I_n$ has eigenvalues $\left\{ \lambda_i - k \right\}^n_{i = 1}$. Therefore, $\nabla^2 f(x, y) - m \mathbb I_2$ has eigenvalues
+\begin{align*}
+  \lambda_{m, 1} &= 2a - 1 - m \\
+  \lambda_{m, 2} &= 2a + 1 - m.
+\end{align*}
+
+To ensure $\lambda_{m, 1}, \lambda_{m, 2}$ are nonnegative we set $a > \frac{1}{2}$ and $m \leq a$. Therefore, $f$ is strongly convex with parameter $m$, $a \geq m > 0$, as desired.
+\end{proof}
+
+We present below figures of $f$ evaluated on $[-1, 1]\times [-1, 1]$ for $a \in \left\{0, 0.25, 0.5, 0.75\right\}$.
+
+```{r, echo = F, fig.height = 4.5, fig.width = 3.5, fig.align = 'center', fig.show = 'hold'}
+a <- c(0, 0.25, 0.5, 0.75)
+f <- function(x, y, a) {
+  abs(x * y) + a * (x^2 + y^2)
+}
+
+x <- y <- seq(-1, 1, length.out = 50)
+Za <- lapply(a, function(ai) outer(x, y, FUN = function(x1, x2) f(x1, x2, ai)))
+
+for (i in 1:length(a))
+  persp(x, y, Za[[i]], zlab = expression(f(x, y)), theta = 15, phi = 30, 
+        main = paste0("f(x, y; a), a = ", a[i]))
+```
+
+## 2.2
+
+### 2.2 (a)
+
+For $x \in \R^n_{++}$ we find gradient
+$$
+  \nabla f(x) = -\left[ x^{-1}_1, x^{-1}_2, \cdots , x^{-1}_n \right],
+$$
+and Hessian
+$$
+  \nabla^2 f(x) = 
+  \begin{bmatrix}
+    x^{-2}_1 & 0 & \cdots & 0 \\
+    0 & x^{-2}_2 & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & x^{-2}_n \\
+  \end{bmatrix}.
+$$
+
+Since $\nabla^2 f(x)$ is diagonal we may immediately obtain its eigenvalues $\left\{ \lambda_i \right\}^n_{i = 1}$,
+$$
+  \lambda_i = x^{-2}_i.
+$$
+
+We see that, since $x \in \R^n_{++} \iff x_i > 0, i = 1, ..., n$, all eigenvalues $\lambda_i > 0$. Therefore, $f$ must be strongly convex (and so strictly convex, and convex), as desired.
+
+### 2.2 (b)
+
+
+## 2.3
+
+# Question 3
+
+# Question 4
