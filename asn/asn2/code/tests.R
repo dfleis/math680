@@ -21,4 +21,28 @@ persp(x, y, Za[[i]], zlab = expression(f(x, y)), theta = 15, phi = 30,
 
 
 
+n <- 100
+x <- runif(n, 0, 10)
+xnorm <- x/sum(x)
+xbar <- mean(x)
+
+-sum(xnorm * log(xnorm))
+-1/(n * xbar) * sum(x * log(x)) + log(n * xbar)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
