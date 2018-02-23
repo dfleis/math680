@@ -34,61 +34,89 @@ That is, $C$ is a convex set, as desired.
 
 ## 2.1
 
-\begin{proof} Recall that a (continuous, twice differentiable) function $f(z)$, $z\in C$, is convex on $C$ if and only if its Hessian is positive semidefinite for all $z$ on the interior of $C$,
+Let $f$ be defined as
 $$
-  \nabla^2 f(z) \in \S^n_+,
+  f(x,y) = |xy| + a(x^2 + y^2).
 $$
-and strongly convex with parameter $m > 0$ if and only if
+Recall that $f$ is a convex function if and only if its Hessian is positive semi-definite. 
+
+**Case 1**: $xy > 0 \implies f_+(x,y) = xy + a(x^2 + y^2)$.
+
+We begin by finding the gradient of $f_+(x,y)$ to be
 $$
-  \nabla^2 f(z) - m \mathbb I_n \in \S^n_{+}.
+  \nabla f_+(x,y) = (y + 2ax, x + 2ay).
 $$
 
-Furthermore, a matrix $M \in \R^{n\times n}$ is positive semidefinite if and only if all eigenvalues of $M$ are nonnegative. Since $f$ is nondifferentiable along $x = 0, y = 0$ we first apply a differentiable approximation $f_\epsilon$
+Therefore, the Hessian is
 $$
-  f_\epsilon(x, y) = \sqrt{x^2 y^2 + \epsilon} + a\left(x^2 + y^2\right) \underset{\epsilon\to 0}{\longrightarrow} |xy| + a\left(x^2 + y^2\right) = f(x, y)
+  \nabla^2 f_+(x,y)
+  =
+  \begin{bmatrix}
+    2a & 1 \\
+    1 & 2a
+  \end{bmatrix}.
 $$
-Now, $f_\epsilon$ admits gradient 
+
+For this Hessian to be positive semi-definite, we require its eigenvalues to be nonnegative. We find the eigenvalues to be $\lambda_1 = 2a - 1$ and $\lambda_2 = 2a + 1$. As a direct result, the Hessian is positive semi-definite (and therefore, convex) if and only if $a \geq \frac{1}{2}$.
+
+Furthermore, in order for $f_+$ to be strongly convex, we must have the eigenvalues $\lambda \left(\nabla^2 f_+(x,y) - m \mathbb I \right)  = \{\lambda_i - m\}_{i=1,2}$ be nonnegative for some $m > 0$ (i.e., $\nabla^2 f_+(x,y) - m \mathbb I$ must be positive semidefinite for some $m > 0$). We see that
+\begin{align*}
+  \lambda_1 - m &= 2a - 1 - m
+  \lambda_2 - m &= 2a + 1 - m.
+\end{align*}
+
+The above eigenvalues will be nonnegative for $a > \frac{1}{2}$ and $m \leq a$. Therefore, $f_+$ is strongly convex if $a > \frac{1}{2}$. 
+
+**Case 2**: $xy < 0 \implies f_-(x,y) = -xy + a(x^2 + y^2)$.
+
+We find $f_-$ to have gradient
 $$
-  \nabla f_\epsilon(x, y) = \left(2 a x+\frac{x y^2}{\sqrt{x^2 y^2+\epsilon }},2 a y+\frac{x^2 y}{\sqrt{x^2 y^2+\epsilon }}\right),
+  \nabla f_-(x,y) = (-y +2ax , -x + 2ay),
 $$
 
 and Hessian
 $$
-  \nabla^2 f_\epsilon(x, y) = \left[
-\begin{array}{cc}
- -\frac{x^2 y^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{y^2}{\sqrt{x^2 y^2+\epsilon }}+2 a & \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} \\
- \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} & -\frac{y^2 x^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{x^2}{\sqrt{x^2 y^2+\epsilon }}+2 a \\
-\end{array}
-\right].
+  \nabla^2 f_-(x,y)
+  =
+    \begin{bmatrix}
+    2a & -1 \\
+    -1 & 2a
+  \end{bmatrix}.
 $$
 
-We find $\nabla^2 f_\epsilon(x, y)$ to be\footnote{Proof left as an exercise.}
-\begin{align*}
-  \lambda_{\epsilon, 1} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }-\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}} \\
-  \lambda_{\epsilon, 2} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }+\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}}.
-\end{align*}  
+Once again, for the Hessian to be positive semidefinite, we must find nonnegative eigenvalues $\lambda_i \geq 0$, $i = 1, 2$. As above, we find the eigenvalues to be $\lambda_1 = 2a - 1$ and $\lambda_2 = 2a + 1$. Therfore, the Hessian must be positive semidefinite (and so $f_-$ must be convex) if and only if $a \geq \frac{1}{2}$ and strongly convex if $a > \frac{1}{2}$.
 
+**Case 3**: $xy = 0$. For such a case we note three possible scenarios
+$$xy = 0 \implies  f_0(x,y) = 
+\begin{cases} 
+    ay^2, \quad \text{if } x = 0 \text{ and } y \ne 0, \\ 
+    ax^2, \quad \text{if } x \ne 0 \text{ and } y = 0, \\
+    0, \quad \quad \text{else.}
+  \end{cases}
+$$
+    
+If $x = 0$ and $y \ne 0$, 
+$$
+  \nabla f_0(x,y) = (0 , 2ay)
+$$
+and so
+$$
+  \nabla^2 f_0(x,y)
+  =
+  \begin{bmatrix}
+    0 & 0 \\
+    0 & 2a
+  \end{bmatrix}.
+$$
 
-Taking the limits of $\lambda_{\epsilon,1}$ and $\lambda_{\epsilon,2}$ as $\epsilon \to 0$,
-\begin{align*}
-  \lambda_1 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 1} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}-2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
-  &= 2 a - \frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
-  &= 2a - 1, \\
-  \lambda_2 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 2} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}+2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
-  &= 2 a+\frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
-  &= 2a + 1.
-\end{align*}
+This Hessian $\nabla f^2_0$ has only one eigenvalue $\lambda_1 = 2a$, which is nonnegative for any $a \geq 0$. It follows that $f_0(x,y)$ will also be convex for $a \geq \frac{1}{2}$ and strongly convex for $a > \frac{1}{2}$. By symmetry, the same eigenvalue is found for the case where $x \ne 0$ and $y = 0$, so we arrive to the same conclusions. Finally, for the last scenario with $x = y = 0$, we note that the domain of $f_0$ under $x = y = 0$ is defined at only a single point, trivially satisfying strong convexity
+$$
+  \left( \nabla f(z_1) - \nabla f(z_2) \right)^T (z_1 - z_2) \geq m \lVert z_1 - z_2 \rVert^2_2
+$$
 
-In this form we see that $\nabla^2 f(x, y)$ has nonnegative eigenvalues if and only if $a \geq \frac{1}{2}$, and so $f$ is convex for $a \geq \frac{1}{2}$. To show strong convexity, we use the result that if matrix $M$ has eigenvalues $\left\{\lambda_i\right\}^n_{i = 1}$ then $M - k \mathbb I_n$ has eigenvalues $\left\{ \lambda_i - k \right\}^n_{i = 1}$. Therefore, $\nabla^2 f(x, y) - m \mathbb I_2$ has eigenvalues
-\begin{align*}
-  \lambda_{m, 1} &= 2a - 1 - m \\
-  \lambda_{m, 2} &= 2a + 1 - m.
-\end{align*}
+on all points in its domain, as desired.
 
-To ensure $\lambda_{m, 1}, \lambda_{m, 2}$ are nonnegative we set $a > \frac{1}{2}$ and $m \leq a$. Therefore, $f$ is strongly convex with parameter $m$, $a \geq m > 0$, as desired.
-\end{proof}
-
-We present below figures of $f$ evaluated on $[-1, 1]\times [-1, 1]$ for $a \in \left\{0, 0.25, 0.5, 0.75\right\}$.
+Presented below figures of $f$ evaluated on $[-1, 1]\times [-1, 1]$ for $a \in \left\{0, 0.25, 0.5, 0.75\right\}$.
 
 ```{r, echo = F, fig.height = 4.5, fig.width = 3.5, fig.align = 'center', fig.show = 'hold'}
 a <- c(0, 0.25, 0.5, 0.75)
@@ -108,11 +136,12 @@ for (i in 1:length(a))
 
 ### 2.2 (a)
 
-For $x \in \R^n_{++}$ we find gradient
+For $x \in \R^n_{++}$ we find gradient of $f(x) = -\sum^n_{i = 1} \log x_i$ to be
 $$
   \nabla f(x) = -\left[ x^{-1}_1, x^{-1}_2, \cdots , x^{-1}_n \right],
 $$
-and Hessian
+
+with corresponding Hessian
 $$
   \nabla^2 f(x) = 
   \begin{bmatrix}
@@ -123,12 +152,12 @@ $$
   \end{bmatrix}.
 $$
 
-Since $\nabla^2 f(x)$ is diagonal we may immediately obtain its eigenvalues $\left\{ \lambda_i \right\}^n_{i = 1}$,
+Since $\nabla^2 f(x)$ is diagonal we may immediately obtain its eigenvalues $\left\{ \lambda_i \right\}^n_{i = 1}$ such that
 $$
   \lambda_i = x^{-2}_i.
 $$
 
-We see that, since $x \in \R^n_{++} \iff x_i > 0, i = 1, ..., n$, all eigenvalues $\lambda_i > 0$. Therefore, $f$ must be strongly convex (and so strictly convex, and convex), as desired.
+We see that, since $x \in \R^n_{++} \iff x_i > 0, i = 1, ..., n$, all eigenvalues must be strictly positive $\lambda_i > 0$. Therefore, $f$ must be strongly convex (since there must exist constant $m$ such that $\lambda_i - m \geq 0$), as desired.
 
 ### 2.2 (b)
 
@@ -197,8 +226,11 @@ as desired.
 \begin{proof}
 
 $(1 \implies 2)$
+
 $(2 \implies 3)$
+
 $(3 \implies 4)$
+
 $(4 \implies 1)$
 
 \end{proof}
@@ -212,11 +244,10 @@ $$
   \lVert \nabla^2 f(x) - \nabla^2 f(y) \rVert_2 \leq L \lVert x - y \rVert_2.
 $$
 
-
-
-
 $(2 \implies 3)$
+
 $(3 \implies 4)$
+
 $(4 \implies 1)$
 
 \end{proof}
@@ -225,6 +256,340 @@ $(4 \implies 1)$
 
 ## (a)
 
+For parts 1 and 2 we load `CVXR` in order to solve the (convex) 2d fused lasso problem.
+```{r, message = F}
+library(CVXR)
+```
+
 ### 1.
 
-# Question 5
+We load our data `circle.csv` and define some useful constants
+```{r}
+circle <- as.matrix(read.csv("../data/circle.csv", header = F))
+n <- length(circle); nr <- nrow(circle); nc <- ncol(circle)
+```
+
+Next, we translate the 2d fused lasso penalty
+$$
+  \lambda \sum_{\{i,j\} \in E} |\theta_i - \theta_j|, \quad E = \text{set of edges \{(i,j)\} connecting adjascent pixels}
+$$
+
+into a `CVXR` compatible function
+```{r}
+fused_lasso_2d <- function(theta, lambda = 0) {
+  nr <- nrow(theta); nc <- ncol(theta)
+  S <- theta[1:(nr - 1),] - theta[2:nr,] # SOUTH
+  N <- theta[2:nr,] - theta[1:(nr - 1),] # NORTH
+  E <- theta[,1:(nc - 1)] - theta[,2:nc] # EAST
+  W <- theta[,2:nc] - theta[,1:(nc - 1)] # WEST
+  lambda * (sum(abs(S)) + sum(abs(N)) + sum(abs(E)) + sum(abs(W)))
+}
+```
+
+as well as defining some parameters and variables, as well as our $\ell_2$ loss $\frac{1}{2} \lVert Y - \theta \rVert^2_2$ 
+```{r}
+lambda <- 1
+theta <- Variable(nr, nc)
+theta_hat <- matrix(0, nrow = nr, ncol = nc)
+loss <- sum(0.5 * (circle - theta)^2)
+```
+
+Finally, we run run `CVXR` on the problem
+```{r}
+obj <- loss + fused_lasso_2d(theta, lambda)
+prob <- Problem(Minimize(obj))
+res <- solve(prob)
+theta_hat <- res$getValue(theta)
+```
+
+Comparing the original data with the fused fit we see that the fused fit of the circle is essentially a square with truncated/rounded corners, as seen below.
+```{r, echo = F, fig.show = 'hold', fig.align = 'center', fig.width = 3.5, fig.height = 4}
+cols <- colorRampPalette(c("black", "white"))
+image(circle, xaxt = 'n', yaxt = 'n', col = cols(16), main = "Target")
+image(theta_hat, xaxt = 'n', yaxt = 'n', col = cols(16),
+      main = substitute(paste("Fused Lasso Fit: ", lambda, " = ", lam),
+                        list(lam = lambda)))
+```
+
+We can understand such behaviour by the noting the conflicting behaviour of the $\ell_2$ term and the $\ell_1$ fused term in our objective function. The $\ell_2$-loss term
+$$
+  \frac{1}{2}\sum^n_{i = 1} \left(y_i - \theta_i\right)^2
+$$
+
+is minimized as $\hat\theta_i \longrightarrow y_i$, while the $\ell_1$-fused term
+$$
+  \lambda \sum_{\{i,j\} \in E} |\theta_i - \theta_j|
+$$
+
+is minimized when adjascent cells are 'close' to each other (and as $\lambda \to \infty$ we obtain $\hat\theta_i \to \bar y$). Deep in the interior/far out in the extertior of the circle, the objective estimates $\hat\theta_i \approx y_i$ since essentially all adjascent values will correspond to 0 (black) or 1 (white), respectively. However, along the boundary of the two regions we balance the two objectives by detecting a 'changepoint' in the data (as a consequence of using the $\ell_1$ norm), inside of which most observations are close to 0 and beyond which most observations are close to 1.
+
+### 2.
+
+We load the `lenna_64.csv` data and define some useful constants
+```{r}
+lenna <- as.matrix(read.csv("../data/lenna_64.csv", header = F))
+n <- length(lenna); nr <- nrow(lenna); nc <- ncol(lenna)
+```
+
+and run `CVXR` on the 2d fused lasso problem in the same way as we did for `circle.csv`, but now over a vector of tuning parameters $\{\lambda_k\}_{k = 0, ..., 8} = \left\{10^{-k/4}\right\}_{k = 0, ..., 8}$
+
+<!-- ```{r} -->
+<!-- lambda_vals <- 10^(-(0:8)/4) -->
+<!-- theta_vals <- vector(mode = 'list', length = length(lambda_vals)) -->
+<!-- obj_val <- vector(mode = 'numeric', length = length(lambda_vals)) -->
+<!-- theta <- Variable(nr, nc) -->
+<!-- loss <- sum(0.5 * (lenna - theta)^2) -->
+
+<!-- pt <- proc.time() -->
+<!-- for (i in 1:length(lambda_vals)) { -->
+<!--   lambda <- lambda_vals[i] -->
+<!--   obj <- loss + fused_lasso_2d(theta, lambda) -->
+<!--   prob <- Problem(Minimize(obj)) -->
+<!--   res <- solve(prob) -->
+<!--   theta_vals[[i]] <- res$getValue(theta) -->
+<!--   obj_val[i] <- res$value -->
+<!-- } -->
+<!-- print(proc.time() - pt) -->
+<!-- ``` -->
+
+<!-- Presented below are plots of the original data and the fused fits, along with histograms of the fit values $\{\hat\theta_i\}$ -->
+<!-- ```{r, echo = F, fig.align = 'center', fig.height = 4, fig.width = 4} -->
+<!-- cols <- colorRampPalette(c("black", "white")) -->
+<!-- # flip so image() diplays the right orientation -->
+<!-- lenna2 <- t(apply(lenna, 2, rev)) -->
+<!-- theta_hat <- lapply(theta_vals, function(tv) t(apply(tv, 2, rev))) -->
+
+<!-- image(lenna2, col = cols(16), xaxt = 'n', yaxt = 'n', main = "Target") -->
+<!-- hist(lenna2, breaks = 1e2, xlim = c(0, 1), main = "Target", -->
+<!--      xlab = expression(hat(theta))) -->
+<!-- ``` -->
+
+<!-- ```{r, echo = F, fig.align = 'center', fig.height = 3.25, fig.width = 3, fig.show = 'hold'} -->
+<!-- for (k in 1:length(lambda_vals)) { -->
+<!--   image(theta_hat[[k]], col = cols(16), xaxt = 'n', yaxt = 'n', -->
+<!--         main = substitute(paste(lambda, " = ", lam), -->
+<!--                           list(lam = round(lambda_vals[k], 3)))) -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- ```{r, echo = F, fig.show = 'hide'} -->
+<!-- # find largest count in histograms in order to standardize -->
+<!-- # the histograms to the same y axis -->
+<!-- ymax <- max(sapply(theta_hat, function(th) max(hist(th)$counts))) -->
+<!-- ``` -->
+
+<!-- ```{r, echo = F, fig.align = 'center', fig.height = 3, fig.width = 2.75, fig.show = 'hold'} -->
+<!-- for (k in 1:length(lambda_vals)) { -->
+<!--   hist(theta_hat[[k]], breaks = 1e2, xlim = c(0, 1), -->
+<!--        ylim = c(0, ymax), -->
+<!--        xlab = expression(hat(theta)), -->
+<!--        ylab = "", -->
+<!--        main = substitute(paste(lambda, " = ", lam), -->
+<!--                         list(lam = round(lambda_vals[k], 3)))) -->
+<!-- } -->
+<!-- ``` -->
+
+Note that as $\lambda \to 0$ we find the distribution of $\hat\theta_i$ generally becomes less and less kurt. That is, when $\lambda$ is large we see nearly all the fits to be near the mean $\bar y$, and becoming more and more dispersed (towards $\hat\theta_i \to y_i$) as $\lambda$ shrinks.
+
+## (b)
+
+### 1.
+
+Note that our expression
+$$
+  \lVert (x, y) \rVert^3_1 \leq 5x + 7
+$$
+
+is successfully recognized as convex without any serious manipulations. That is, in DCP we write this as
+$$
+  \lVert (x, y) \rVert^3_1 \leq 5x + 7 \quad \mapsto \quad \texttt{pow(norm1(x, y), 3) <= 5 * x + 7},
+$$
+
+as desired.
+
+### 2.
+
+We now consider the expression
+$$
+  \frac{2}{x} + \frac{9}{z - y} \leq 3.
+$$
+
+Since DCP automatically constraining the argument to be within the function's domain handling the domain, DCP does not allow division $\frac{a}{b}$ to be input as `a/b`, as we may expect. Instead, DCP accepts `inv_pos(x)` as $\frac{1}{x}$ and restricts $x$ to $x > 0$ to enforce convexity. Therefore, we replace any instance of $\frac{1}{x}$ with `inv_pos(x)` to yield
+
+$$
+  \frac{2}{x} + \frac{9}{z - y} \leq 3 \quad \mapsto \quad \texttt{2 * inv\_pos(x) + 9 * inv\_pos(z - y) <= 3}
+$$
+
+as desired.
+
+### 3.
+
+We have the expression
+$$
+  \sqrt{x^2 + 4} + 2y \leq -5x.
+$$
+
+The RHS is valid as-is, while the LHS requires some manipulation in order for the problem to be recognized as convex since $\sqrt{\cdot}$ is treated as concave, independent of its arguments. To get around this we make use of the $\ell_2$ norm (which is classified as convex)
+$$
+  \lVert (x_1, x_2) \rVert_2 = \sqrt{x_1^2 + x_2^2}.
+$$
+
+Hence,
+$$
+  \lVert (x, 2) \rVert_2 = \sqrt{x^2 + 4}.
+$$
+
+This gives us the following DCP expressions
+$$
+  \sqrt{x^2 + 4} + 2y \leq -5x \quad \mapsto \quad \texttt{norm2(x, 2) + 2 * y <= -5 * x}
+$$
+
+as desired.
+
+### 4.
+
+We begin with the problem
+$$
+  (x + 3) \cdot z \cdot (y - 5) \geq 8,\quad x \geq -3,\,z \geq 0,\,y \geq 5.
+$$
+
+To translate into DCP we first note that this is equivalent to the problem
+$$
+  x\cdot z \cdot y \geq 8,\quad x \geq 0,\,z \geq 0,\,y \geq 0.
+$$
+
+To enforce the (new) domain $x, y, z \geq 0$ we apply the geometric mean
+$$
+  \texttt{geo\_mean(x1, ..., xk)} = \left(x_1 \cdot \cdots \cdot x_k \right)^\frac{1}{k}
+$$
+
+since DCP automatically restricts each argument as $x_i \geq 0$. We now wish to remove the $k^\text{th}$-root term. However, if we were to raise our geometric mean expression to the $k^\text{th}$ power then DCP would no longer treat the LHS as a concave expression since $x^k$, $k > 1$, is always considered to be convex (independent of the form $x$ takes). A solution is to instead take the $k^\text{th}$ root of the RHS. This gives us the DCP expression
+$$
+  (x + 3) \cdot z \cdot (y - 5) \geq 8,\quad x \geq -3,\,z \geq 0,\,y \geq 5 \quad \mapsto \quad \texttt{geo\_mean(x, y, z) >= 2},
+$$
+
+as desired.
+
+### 5.
+
+Our expression
+$$
+  \frac{\left(x + 3z\right)^2}{\log \left(y - 1\right)} + 2 y^2 \leq 10
+$$
+
+is translated into DCP by making use of the function $\frac{s^2}{t} \mapsto \texttt{quad\_over\_lin(s, t)}$. Without other major issues we translate this expression directly into DCP via
+$$
+  \frac{\left(x + 3z\right)^2}{\log \left(y - 1\right)} + 2 y^2 \leq 10 \quad \mapsto \quad \texttt{quad\_over\_lin(x + 3 * z, log(y - 1)) + 2 * square(y) <= 10},
+$$
+
+as desired.
+
+### 6.
+
+We wish to translate the following into DCP interpretable format
+$$
+    \log \left( e^{-\sqrt{x}} + e^{2z} \right) \leq -e^{5y}.
+$$
+
+DCP has a unique function designed to handle logarithms of sums of exponential terms. In paritcular,
+$$
+  \log \left( e^{x_1} + \cdots + e^{x_k} \right) \quad \mapsto \quad \texttt{log\_sum\_exp(x1, ..., xk)}.
+$$
+
+Using this scheme we translate our expression into DCP as
+$$
+  \log \left( e^{-\sqrt{x}} + e^{2z} \right) \leq -e^{5y} \quad \mapsto \quad \texttt{log\_sum\_exp(-sqrt(x), 2 * z) <= -exp(5 * y)},
+$$
+
+as desired.
+
+### 7.
+
+We begin by noting the string of equivalences of our target expression
+\begin{align*}
+\sqrt{\lVert \left(2x - 3y, y + x\right) \rVert_1} = 0 &\iff \lVert \left(2x - 3y, y + x\right) \rVert_1 = 0 \\
+&\iff \lVert \left(2x - 3y, y + x\right) \rVert_1 \leq 0.
+\end{align*}
+
+This yields the DCP expression
+$$
+  \sqrt{\lVert \left(2x - 3y, y + x\right) \rVert_1} = 0 \quad \mapsto \quad \texttt{norm1(2 * x - 3 * y, y + x) <= 0}.
+$$
+
+as desired.
+
+### 8.
+
+We wish to translate the following inequality
+$$
+  y \log \left (\frac{y}{2x}\right) \leq y + x, \quad x > 0,\, y > 0.
+$$
+
+DCP handles the LHS via the Kullback–Leibler function $y \log \frac{y}{x} - y + x \mapsto \texttt{kl\_div(y, x)}$. This function automatically handles the domain restriction of $x, y > 0$. Thus,
+$$
+  y \log \left (\frac{y}{2x}\right) \leq y + x, \quad x > 0,\, y > 0 \quad \mapsto \quad \texttt{kl\_div(y, 2 * x) + x - y <= y + x - 30},
+$$
+
+as desired. 
+
+\newpage
+
+# Appendix
+
+## Question 2.1 (Alternate Solution)
+
+Below we present an alternate (and terrible) solution to proving that $f(x, y) = |xy| + a\left(x^2 + y^2\right)$ is convex $\iff a \geq \frac{1}{2}$ and strictly convex $\iff a > \frac{1}{2}$.
+
+\begin{proof} Recall that a (continuous, twice differentiable) function $f(z)$, $z\in C$, is convex on $C$ if and only if its Hessian is positive semidefinite for all $z$ on the interior of $C$,
+$$
+  \nabla^2 f(z) \in \S^n_+,
+$$
+and strongly convex with parameter $m > 0$ if and only if
+$$
+  \nabla^2 f(z) - m \mathbb I_n \in \S^n_{+}.
+$$
+
+Furthermore, a matrix $M \in \R^{n\times n}$ is positive semidefinite if and only if all eigenvalues of $M$ are nonnegative. Since $f$ is nondifferentiable along $x = 0, y = 0$ we first apply a differentiable approximation $f_\epsilon$
+$$
+  f_\epsilon(x, y) = \sqrt{x^2 y^2 + \epsilon} + a\left(x^2 + y^2\right) \underset{\epsilon\to 0}{\longrightarrow} |xy| + a\left(x^2 + y^2\right) = f(x, y)
+$$
+Now, $f_\epsilon$ admits gradient 
+$$
+  \nabla f_\epsilon(x, y) = \left(2 a x+\frac{x y^2}{\sqrt{x^2 y^2+\epsilon }},2 a y+\frac{x^2 y}{\sqrt{x^2 y^2+\epsilon }}\right),
+$$
+
+and Hessian
+$$
+  \nabla^2 f_\epsilon(x, y) = \left[
+\begin{array}{cc}
+ -\frac{x^2 y^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{y^2}{\sqrt{x^2 y^2+\epsilon }}+2 a & \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} \\
+ \frac{2 x y}{\sqrt{x^2 y^2+\epsilon }}-\frac{x^3 y^3}{\left(x^2 y^2+\epsilon \right)^{3/2}} & -\frac{y^2 x^4}{\left(x^2 y^2+\epsilon \right)^{3/2}}+\frac{x^2}{\sqrt{x^2 y^2+\epsilon }}+2 a \\
+\end{array}
+\right].
+$$
+
+We find $\nabla^2 f_\epsilon(x, y)$ to have eigenvalues\footnote{Details left as an exercise.}
+\begin{align*}
+  \lambda_{\epsilon, 1} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }-\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}} \\
+  \lambda_{\epsilon, 2} &= \frac{x^2 \left(4 a y^2 \sqrt{x^2 y^2+\epsilon }+\epsilon \right)+4 a \epsilon  \sqrt{x^2 y^2+\epsilon }+\sqrt{4 x^6 y^6+x^4 \epsilon  \left(16 y^4+\epsilon \right)+14 x^2 y^2 \epsilon ^2+y^4 \epsilon ^2}+y^2 \epsilon }{2 \left(x^2 y^2+\epsilon \right)^{3/2}}.
+\end{align*}  
+
+
+Taking the limits of $\lambda_{\epsilon,1}$ and $\lambda_{\epsilon,2}$ as $\epsilon \to 0$,
+\begin{align*}
+  \lambda_1 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 1} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}-2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
+  &= 2 a - \frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
+  &= 2a - 1, \\
+  \lambda_2 = \lim_{\epsilon \to 0} \lambda_{\epsilon, 2} &= \frac{4 a x^2 y^2 \sqrt{x^2 y^2}+2 \sqrt{x^6 y^6}}{2 \left(x^2 y^2\right)^{3/2}} \\
+  &= 2 a+\frac{\left(x^2 y^2\right)^{3/2}}{\sqrt{x^6 y^6}} \\
+  &= 2a + 1.
+\end{align*}
+
+In this form we see that $\nabla^2 f(x, y)$ has nonnegative eigenvalues if and only if $a \geq \frac{1}{2}$, and so $f$ is convex for $a \geq \frac{1}{2}$. To show strong convexity, we use the result that if matrix $M$ has eigenvalues $\left\{\lambda_i\right\}^n_{i = 1}$ then $M - k \mathbb I_n$ has eigenvalues $\left\{ \lambda_i - k \right\}^n_{i = 1}$. Therefore, $\nabla^2 f(x, y) - m \mathbb I_2$ has eigenvalues
+\begin{align*}
+  \lambda_{m, 1} &= 2a - 1 - m \\
+  \lambda_{m, 2} &= 2a + 1 - m.
+\end{align*}
+
+To ensure $\lambda_{m, 1}, \lambda_{m, 2}$ are nonnegative we set $a > \frac{1}{2}$ and $m \leq a$. Therefore, $f$ is strongly convex with parameter $m$, $a \geq m > 0$, as desired.
+\end{proof}

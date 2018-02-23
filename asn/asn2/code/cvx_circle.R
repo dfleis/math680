@@ -17,7 +17,6 @@ fused_lasso_2d <- function(theta, lambda = 0) {
   N <- theta[2:nr,] - theta[1:(nr - 1),] # NORTH
   E <- theta[,1:(nc - 1)] - theta[,2:nc] # EAST
   W <- theta[,2:nc] - theta[,1:(nc - 1)] # WEST
-  #lambda * p_norm(c(S, N, E, W), 1)
   lambda * (sum(abs(S)) + sum(abs(N)) + sum(abs(E)) + sum(abs(W)))
 }
 
