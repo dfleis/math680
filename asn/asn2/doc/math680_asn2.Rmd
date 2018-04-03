@@ -61,7 +61,7 @@ For this Hessian to be positive semi-definite, we require its eigenvalues to be 
 
 Furthermore, in order for $f_+$ to be strongly convex, we must have the eigenvalues $\lambda \left(\nabla^2 f_+(x,y) - m \mathbb I \right)  = \{\lambda_i - m\}_{i=1,2}$ be nonnegative for some $m > 0$ (i.e., $\nabla^2 f_+(x,y) - m \mathbb I$ must be positive semidefinite for some $m > 0$). We see that
 \begin{align*}
-  \lambda_1 - m &= 2a - 1 - m
+  \lambda_1 - m &= 2a - 1 - m \\
   \lambda_2 - m &= 2a + 1 - m.
 \end{align*}
 
@@ -95,21 +95,19 @@ $$xy = 0 \implies  f_0(x,y) =
   \end{cases}
 $$
     
-If $x = 0$ and $y \ne 0$, 
+If $x = 0$ and $y \ne 0$ then $f_0(x, y) =  ay^2$ so
 $$
-  \nabla f_0(x,y) = (0 , 2ay)
-$$
-and so
-$$
-  \nabla^2 f_0(x,y)
-  =
-  \begin{bmatrix}
-    0 & 0 \\
-    0 & 2a
-  \end{bmatrix}.
+  \frac{\partial f_0}{\partial y} = 2ay,
 $$
 
-This Hessian $\nabla f^2_0$ has only one eigenvalue $\lambda_1 = 2a$, which is nonnegative for any $a \geq 0$. It follows that $f_0(x,y)$ will also be convex for $a \geq \frac{1}{2}$ and strongly convex for $a > \frac{1}{2}$. By symmetry, the same eigenvalue is found for the case where $x \ne 0$ and $y = 0$, so we arrive to the same conclusions. Finally, for the last scenario with $x = y = 0$, we note that the domain of $f_0$ under $x = y = 0$ is defined at only a single point, trivially satisfying strong convexity
+and
+$$
+  \frac{\partial^2 f_0}{\partial y^2} = 2a.
+$$
+
+It follows that for $x = 0$ and $y \ne 0$ we find $f_0(x,y)$ to be be convex for $a \geq \frac{1}{2}$ and strongly convex for $a > \frac{1}{2}$. By symmetry, the same result is found for the case where $x \ne 0$ and $y = 0$ (corresponding to $f_0(x, y) = ax^2$), permitting us to arrive to the same conclusions. 
+
+Finally, for the last scenario $x = y = 0$, we note that the domain of $f_0$ under $x = y = 0$ is defined at only a single point, trivially satisfying strong convexity
 $$
   \left( \nabla f(z_1) - \nabla f(z_2) \right)^T (z_1 - z_2) \geq m \lVert z_1 - z_2 \rVert^2_2
 $$
@@ -134,7 +132,7 @@ for (i in 1:length(a))
 
 ## 2.2
 
-### 2.2 (a)
+### 2.2.a
 
 For $x \in \R^n_{++}$ we find gradient of $f(x) = -\sum^n_{i = 1} \log x_i$ to be
 $$
@@ -159,16 +157,66 @@ $$
 
 We see that, since $x \in \R^n_{++} \iff x_i > 0, i = 1, ..., n$, all eigenvalues must be strictly positive $\lambda_i > 0$. Therefore, $f$ must be strongly convex (since there must exist constant $m$ such that $\lambda_i - m \geq 0$), as desired.
 
-### 2.2 (b)
+### 2.2.b
+
+The entropy function, $f : \left\{x \in \mathbb R^n_+ : \sum_{i=1}^n x_i =1\right\} \to \R$ is defined as 
+$$
+f(x) = \begin{cases}
+  -\sum_{i=1}^n x_i \log x_i & x > 0, \\
+  0 & x = 0.
+  \end{cases}
+$$
+
+Now, 
+$$
+  \nabla f(x) = \left(f'_1(x_1), f'_2(x_2), ..., f'_n(x_n)\right)
+$$
+
+where
+$$
+  f'_i(x_i) = 
+  \begin{cases}
+    -\left(1 + \log x_i\right), & x_i > 0 \\
+    0 & x_i = 0.
+  \end{cases}
+$$
+
+Likewise,
+$$
+  \nabla^2 f(x) = 
+  \begin{bmatrix}
+    f''_1(x_1) & 0 & \cdots & 0 \\
+    0 & f''_2(x_2) & \cdots & 0 \\
+    \vdots & \vdots & \ddots & \vdots \\
+    0 & 0 & \cdots & f''_n(x_n)
+  \end{bmatrix},
+$$
+
+where
+$$
+  f''_i(x_i) = 
+  \begin{cases}
+    -x^{-1}_i, & x_i > 0 \\
+    0, & x_i = 0.
+  \end{cases}
+$$
+
+
+Since $\nabla^2 f(x)$ is diagonal, we immediately obtain its eigenvalues 
+$$
+  \left\{ \lambda_i \right\}_{i = 1}^n = \left\{ f''_i(x_i) \right\}^n_{i = 1}
+$$
+
+Clearly, for any $x \in \text{dom}(f) = \R^n_+$ we find that all $\lambda_i \leq 0$. Since $\nabla^2 f$ always has nonpositive eigenvalues, we conclude that $\nabla^2 \left(-f\right)$ must have nonnegative eigenvalues. Therefore, $f$ is nonconvex (and in particular, $f$ is concave since $-f$ is convex), as desired.
 
 ## 2.3
 
 \begin{proof} ($\implies$) Suppose $f$ is convex. Then, $\text{dom}(f)$ is a convex set, and, for all $x, y \in \text{dom}(f)$ and $t \in [0, 1]$,
 \begin{align*}
   f(tx + (1 - t)y) &\leq tf(x) + (1 - t)f(y) \\
-  \iff f(t(x - y) + y) - f(y) &\leq t\left(f(x) - f(y)\right) \\
-  \iff \frac{f(t(x - y) + y) - f(y)}{t} &\leq f(x) - f(y) \\
-  \iff \frac{f(t(x - y) + y) - f(y)}{t} + f(y) &\leq f(x)
+  &\iff f(t(x - y) + y) - f(y) \leq t\left(f(x) - f(y)\right) \\
+  &\iff \frac{f(t(x - y) + y) - f(y)}{t} \leq f(x) - f(y) \\
+  &\iff \frac{f(t(x - y) + y) - f(y)}{t} + f(y) \leq f(x)
 \end{align*}
 
 Note that if we take the limit of our first term as $t\to 0$, for finite $x, y$,
@@ -184,7 +232,7 @@ Therefore, taking the limit of our inequality above as $t\to 0$,
   \iff \nabla f(y)^T (x - y) + f(y) &\leq f(x).
 \end{align*}
 
-By symmetry we swap $x$ and $y$ to obtain
+By symmetry we may swap $x$ and $y$ to obtain
 $$
   f \text{ convex} \implies \text{dom}(f) \text{ convex and } f(y) \geq f(x) + \nabla f(x)^T(y - x),
 $$
@@ -204,11 +252,11 @@ Since $\text{dom}(f)$ is convex we find $z = tx + (1 - t)y \in \text{dom}(f)$, $
 
 Multiplying our first inequality by $t$ and the second by $(1 - t)$, and then adding the two yields
 \begin{align*}
-  t \left[ \nabla f(z)^T (x - z) + f(z) \right] + (1 - t) \left[ \nabla f(z)^T (y - z) + f(z) \right] &\leq tf(x) + (1 - t)f(y) \\
-  \iff t\nabla f(z)^T(x - z) + (1 - t)\nabla f(z)^T(y - z) + f(z) &\leq tf(x) + (1 - t)f(y) \\ 
-  \iff \nabla f(z)^T \left[ t(x - z) + (1 - t)(y - z) \right] + f(z) &\leq tf(x) + (1 - t)f(y) \\ 
-  \iff \nabla f(z)^T \left[ tx + (1 - t)y - z \right] + f(z) &\leq tf(x) + (1 - t)f(y) \\ 
-    \iff f(tx + (1 - t)y) &\leq tf(x) + (1 - t)f(y),
+  t \left[ \nabla f(z)^T (x - z) + f(z) \right] &+ (1 - t) \left[ \nabla f(z)^T (y - z) + f(z) \right] \leq tf(x) + (1 - t)f(y) \\
+  &\iff t\nabla f(z)^T(x - z) + (1 - t)\nabla f(z)^T(y - z) + f(z) \leq tf(x) + (1 - t)f(y) \\ 
+  &\iff \nabla f(z)^T \left[ t(x - z) + (1 - t)(y - z) \right] + f(z) \leq tf(x) + (1 - t)f(y) \\ 
+  &\iff \nabla f(z)^T \left[ tx + (1 - t)y - z \right] + f(z) \leq tf(x) + (1 - t)f(y) \\ 
+    &\iff f(tx + (1 - t)y) \leq tf(x) + (1 - t)f(y),
 \end{align*}
 
 where the final line was achieved by recalling that $z = tx + (1 - t)y$. Therefore,
@@ -221,47 +269,234 @@ as desired.
 
 # Question 3
 
-## (a)
+## 3.1
 
-\begin{proof}
+Let $f$ be convex and twice differentiable. 
 
-$(1 \implies 2)$
+### $(1 \implies 2)$ 
 
-$(2 \implies 3)$
-
-$(3 \implies 4)$
-
-$(4 \implies 1)$
-
-\end{proof}
-
-## (b)
-
-\begin{proof} Let $f$ be convex and twice differentiable. \\
-
-$(1 \implies 2)$ If $\nabla f$ is $L$-Lipschitz then, for $x, y \in \text{dom}(f)$, $L > 0$,
+If $\nabla f$ is Lipschitz with constant $L > 0$ then, by definition,
 $$
-  \lVert \nabla^2 f(x) - \nabla^2 f(y) \rVert_2 \leq L \lVert x - y \rVert_2.
+\lVert \nabla f(x) - \nabla f(y) \rVert_2 \leq L \lVert x - y \rVert_2.
 $$
 
-$(2 \implies 3)$
+By the Cauchy-Schwartz inequality
+$$
+  \left| \langle u,v \rangle \right| \leq \lVert u\rVert \cdot \lVert v \rVert,
+$$
 
-$(3 \implies 4)$
+substituting $u = \nabla f(x) - \nabla f(y)$ and $v = x - y$ in Cauchy-Schwartz, and by $L$-Lipschitz continuity assumed via (1), we obtain
+\begin{align*}
+\left( \nabla f(x) - \nabla f(y) \right)^T (x-y) &\leq \lVert \nabla f(x) - \nabla f(y) \rVert_2 \cdot \lVert x - y \rVert_2 \quad \text{(Cauchy-Schwartz)} \\
+    &\leq L \lVert x - y \rVert^2_2 \quad \text{($L$-Lipschitz)},
+\end{align*}
 
-$(4 \implies 1)$
+as desired. 
 
-\end{proof}
+### $(1 \implies 3)$ 
+
+Assume (1) holds
+$$
+  \lVert \nabla f(x) - \nabla f(y) \rVert_2 \leq L \lVert x - y \rVert_2,
+$$
+
+and define $g(t) = \nabla f\left(y + t(x - y)\right)$ so that
+\begin{align*}
+  g(0) &= \nabla f(y) \\
+  g(1) &= \nabla f(x) \\
+  g'(t) &= \nabla^2 f\left( y + t(x - y) \right) \cdot (x - y).
+\end{align*}
+
+Therefore,
+$$
+  \lVert \nabla f(x) - \nabla f(y) \rVert_2 = \lVert g(1) - g(0) \rVert_2.
+$$
+
+However, applying the Mean Value Theorem on $g$, there must exist some $z \in [0, 1]$ such that\footnote{We can be sure that such a point exists since we have assumed $f$ is twice differentiable (and so applying the Mean Value Theorem on $g$ is permissible) and we have assumed that $f$ is convex (so such a point $z \in [0,1]$ must exist).}
+$$
+  g'(z) = \frac{g(1) - g(0)}{1 - 0} = g(1) - g(0).
+$$
+
+Thus,
+\begin{align*}
+&\lVert \nabla f(x) - \nabla f(y) \rVert_2 \leq L \lVert x - y \rVert_2 \\
+  &\implies \lVert g(1) - g(0) \rVert_2 \leq L \lVert x - y \rVert_2 \\
+  &\implies \lVert g'(z) \rVert_2 \leq L \lVert x - y \rVert_2 \\
+  &\iff \lVert \nabla^2 f\left( z^* \right) (x - y) \rVert_2 \leq L \lVert x - y \rVert_2, \quad \text{for some $z^* \in [x, y]$} \\
+  &\iff \lVert \nabla^2 f\left(z^*\right) \rVert_2 \cdot \lVert x - y \rVert_2 \leq L \lVert x - y \rVert_2 \\
+  &\iff \lVert \nabla^2 f\left(z^*\right) \rVert_2 \leq L \\
+  &\iff \nabla^2 f\left(z^*\right) \preceq L \mathbb I.
+\end{align*}
+
+Therefore, since $x$ and $y$ were arbtirary
+$$ 
+  \nabla^2 f(x) \preceq L \quad \text{for all $x$},
+$$
+
+as desired. 
+
+### $(3 \implies 4)$
+
+Assume $(3)$ holds so that $\nabla^2 f(x) \preceq L\mathbb I$ and define $g$ such that
+$$
+  g(z) = \frac{L}{2} z^T z - f(z) \iff f(z) = \frac{L}{2} z^T z - g(z).
+$$
+
+Then,
+$$
+\nabla^2 f(x) \preceq L\mathbb I \iff 0 \preceq \nabla^2 g(x),
+$$
+
+informing us that $g$ must be convex. From the convexity of $g$, we must have that $g$ satisfies the first order condition outlined in 2.3
+$$
+  g(y) \geq g(x) + \nabla g(x)^T (y - x).
+$$
+
+Plugging in our definition of $g$ yields
+\begin{align*}
+  \frac{L}{2} y^T y - f(y) &\geq \frac{L}{2} x^T x - f(x) + \left(Lx - \nabla f(x)\right)^T\left(y - x\right) \\
+  \iff -f(y) &\geq - f(x) - \nabla f(x)^T \left(y - x\right) + \frac{L}{2} x^T x - Lx^T x + Lx^T y - \frac{L}{2} y^T y \\
+  &= - f(x) - \nabla f(x)^T \left(y - x\right) -\frac{L}{2} \left( y^T y - 2 x^T y + x^T x \right) \\
+  &= -f(x) - \nabla f(x)^T\left(y - x\right) -\frac{L}{2} \lVert y - x \rVert^2_2 \\
+  \iff f(y) &\leq f(x) + \nabla f(x)^T \left(y - x\right) + \frac{L}{2} \lVert y - x \rVert^2_2,
+\end{align*}
+
+as desired.
+
+### $(4 \implies 1)$ 
+
+Assume (4) holds so that
+$$
+  f(y) \leq f(x) + \nabla f(x)^T(y - x) + \frac{L}{2} \lVert y - x \rVert^2_2.
+$$
+
+Next, define $g(z) = \frac{L}{2} z^T z - f(z) \iff f(z) = \frac{L}{2}z^Tz - g(z)$ and apply (4) to yield
+\begin{align*}
+  \frac{L}{2}y^T y - g(y) &\leq \frac{L}{2} x^T x - g(x) + \left(Lx - \nabla g(x)\right)^T \left(y - x\right) + \frac{L}{2} \lVert y - x \rVert^2_2 \\
+  \iff g(x) - g(y) &\leq -\frac{L}{2} x^T x - \frac{L}{2} y^T y + L x^T y - L x^T x - \nabla g(x)^T (y - x) + \frac{L}{2} \lVert y - x \rVert^2_2 \\
+  &= -\frac{L}{2} \left( y^T y - 2 x^T y + x^T x \right) - \nabla g(x)^T(y - x) + \frac{L}{2} \lVert y - x \rVert^2_2 \\
+  &= -\frac{L}{2} \lVert y - x \rVert^2_2 - \nabla g(x)^T (y - x) + \frac{L}{2} \lVert y - x \rVert^2_2 \\
+  &= -\nabla g(x)^T(y - x) \\
+  \iff g(y) & \geq g(x) + \nabla g(x)^T(y - x).
+\end{align*}
+
+Thus, recalling our first order condition for convexity from Question 2.3 we may conclude that $g$ is indeed convex. Now, if $g$ is convex then
+$$
+  \nabla^2 g(x) \succeq 0 \iff LI \succeq \nabla^2 f(x).
+$$
+
+However, defining $h(t) = \nabla f(y + t(x - y))$ so that
+\begin{align*}
+  h(0) &= \nabla f(x) \\
+  h(1) &= \nabla f(y) \\
+  h'(t) &= \nabla^2 f(y + t(x - y)) \cdot (x - y).
+\end{align*}
+
+Therefore,
+\begin{align*}
+  \lVert \nabla f(x) - \nabla f(y) \rVert_2 &= \lVert \nabla f(y) - \nabla f(x) \rVert_2 \\
+  &= \lVert h(1) - h(0) \rVert_2 \\
+  &= \| \int^1_0 h'(t) \,dt \|_2 \\
+  &\leq \int^1_0 \lVert h'(t) \rVert_2\,dt \quad \text{(triangle inequality)} \\
+  &= \int^1_0 \lVert \nabla^2 f\left( y + t(x - y) \right) \cdot (x - y) \rVert_2\,dt \\
+  &\leq \int^1_0 L \lVert x - y \rVert_2\,dt \\
+  &= L \lVert x - y \rVert,
+\end{align*}
+
+where the final inequality was obtained through
+$$
+  \nabla^2 f(x) \preceq L\mathbb I \iff \lVert \nabla^2 f(x) \rVert_2 \leq L.
+$$
+
+Putting this together we find that $f(y) \leq f(x) + \nabla f(x)^T(y - x) + \frac{L}{2} \lVert y - x \rVert^2_2$ implies that $\nabla f$ is $L$-Lipschitz, as desired. \\
+
+Since we have shown $(1) \implies (2), (3)$, $(3) \implies (4)$, and $(4) \implies (1)$ we may conclude that all the above statements are indeed equivalent.
+
+## 3.2
+
+### $(1 \implies 2)$
+
+Assume (1) so that $f$ is strongly convex with parameter $m > 0$. Then, by definition, $f(x) - \frac{m}{2} \lVert x \rVert^2_2$ is convex. Defining $g(x) = f(x) - \frac{m}{2} \lVert x \rVert^2_2$ we find
+$$
+  \nabla g(x) = \nabla f(x) - m x.
+$$
+
+
+However, recall that $g$ is convex if and only if 
+$$
+  0 \leq \left( \nabla g(x) - \nabla g(y) \right)^T (x - y).
+$$
+
+Therefore,
+\begin{align*}
+  0 &\leq \left( \nabla f(x) - mx - \nabla f(y) + my \right)^T(x - y) \\
+  &= \left(\nabla f(x) - \nabla f(x)\right)^T(x - y) - m(x - y)^T(x - y) \\
+  &= \left(\nabla f(x) - \nabla f(x)\right)^T(x - y) - m\lVert x - y \rVert^2_2 \\
+  \iff m \lVert x - y \rVert^2_2 &\leq \left(\nabla f(x) - \nabla f(x)\right)^T(x - y),
+\end{align*}
+as desired.
+
+### $(2 \implies 3)$
+
+Assuming (2) holds we find
+\begin{align*}
+&\left(\nabla f(x) - \nabla f(y) \right)^T (x-y) \geq m\lVert x-y \rVert^2_2 \\
+    &\iff \nabla f(x) + x\nabla^2 f(x) -y \nabla^2 f(x) + y\nabla f(y) \geq 2m\lVert x-y \rVert \\
+    &\iff \nabla^2 f(x) (x-y) + \left(\nabla f(x) - \nabla f(y)\right) \geq 2m\lVert x-y \rVert \\
+    &\iff \nabla^2 f(x) \lVert x-y \rVert \geq m \lVert x-y \rVert,
+\end{align*}
+
+since $\lVert \nabla f(x) - \nabla f(y) \rVert \geq m \lVert x-y \rVert$. It follows that
+$$
+\nabla^2 f(x) \succeq mI,
+$$
+as desired. 
+
+### $(1 \implies 4)$
+
+Once again assume (1) so that $f$ is strongly convex with parameter $m > 0$. Then, by definition, $f(x) - \frac{m}{2} \lVert x \rVert^2_2$ is convex. Defining $g(x) = f(x) - \frac{m}{2} \lVert x \rVert^2_2$ we find
+$$
+  \nabla g(x) = \nabla f(x) - m x.
+$$
+
+Now, apply the first order condition from 2.3 on $g$
+$$
+  g(y) \geq g(x) + \nabla g(x)^T (y - x).
+$$
+
+Hence,
+\begin{align*}
+  f(y) - \frac{m}{2} \lVert y \rVert^2_2 &\geq f(x) - \frac{m}{2} \lVert x \rVert^2_2 + \left( \nabla f(x) - mx \right)^T (y - x) \\
+  \iff f(y) &\geq f(x) + \nabla f(x)^T (y - x) + \frac{m}{2} y^T y - \frac{m}{2} x^T x - mx^T y + mx^T x \\
+  &= f(x) + \nabla f(x)^T(y - x) + \frac{m}{2} y^T y - mx^Ty + \frac{m}{2} x^T x \\
+  &= f(x) + \nabla f(x)^T(y - x) + \frac{m}{2} \lVert y - x \rVert^2_2 \\
+  \iff f(y) &\geq f(x) + \nabla f(x)^T (y - x) + \frac{m}{2} \lVert y - x \rVert^2_2,
+\end{align*}
+
+as desired.
+
+### $(4 \implies 1)$
+
+We begin with 
+\begin{align*}
+&f(y) \geq f(x) + \nabla f(x)^T (y-x) + \frac{m}{2} \lVert y-x \rVert^2_2 \\
+    &\implies \nabla f(y) \geq  \nabla f(x) + m\lVert y-x\rVert \\
+    &\implies \lVert \nabla f(y) - \nabla f(x) \rVert \geq m\lVert y-x \rVert \\ 
+    &\implies \lVert \nabla f(x) - \nabla f(y) \rVert \geq m\lVert x-y \rVert. 
+\end{align*}
+
+Therefore, $f$ must be strongly convex, as desired. 
 
 # Question 4
 
-## (a)
+## 4.a
 
 For parts 1 and 2 we load `CVXR` in order to solve the (convex) 2d fused lasso problem.
 ```{r, message = F}
 library(CVXR)
 ```
 
-### 1.
+### 4.a.1
 
 We load our data `circle.csv` and define some useful constants
 ```{r}
@@ -323,7 +558,7 @@ $$
 
 is minimized when adjascent cells are 'close' to each other (and as $\lambda \to \infty$ we obtain $\hat\theta_i \to \bar y$). Deep in the interior/far out in the extertior of the circle, the objective estimates $\hat\theta_i \approx y_i$ since essentially all adjascent values will correspond to 0 (black) or 1 (white), respectively. However, along the boundary of the two regions we balance the two objectives by detecting a 'changepoint' in the data (as a consequence of using the $\ell_1$ norm), inside of which most observations are close to 0 and beyond which most observations are close to 1.
 
-### 2.
+### 4.a.2
 
 We load the `lenna_64.csv` data and define some useful constants
 ```{r}
@@ -333,67 +568,68 @@ n <- length(lenna); nr <- nrow(lenna); nc <- ncol(lenna)
 
 and run `CVXR` on the 2d fused lasso problem in the same way as we did for `circle.csv`, but now over a vector of tuning parameters $\{\lambda_k\}_{k = 0, ..., 8} = \left\{10^{-k/4}\right\}_{k = 0, ..., 8}$
 
-<!-- ```{r} -->
-<!-- lambda_vals <- 10^(-(0:8)/4) -->
-<!-- theta_vals <- vector(mode = 'list', length = length(lambda_vals)) -->
-<!-- obj_val <- vector(mode = 'numeric', length = length(lambda_vals)) -->
-<!-- theta <- Variable(nr, nc) -->
-<!-- loss <- sum(0.5 * (lenna - theta)^2) -->
+```{r}
+lambda_vals <- 10^(-(0:8)/4)
+theta_vals <- vector(mode = 'list', length = length(lambda_vals))
+obj_val <- vector(mode = 'numeric', length = length(lambda_vals))
+theta <- Variable(nr, nc)
+loss <- sum(0.5 * (lenna - theta)^2)
 
-<!-- pt <- proc.time() -->
-<!-- for (i in 1:length(lambda_vals)) { -->
-<!--   lambda <- lambda_vals[i] -->
-<!--   obj <- loss + fused_lasso_2d(theta, lambda) -->
-<!--   prob <- Problem(Minimize(obj)) -->
-<!--   res <- solve(prob) -->
-<!--   theta_vals[[i]] <- res$getValue(theta) -->
-<!--   obj_val[i] <- res$value -->
-<!-- } -->
-<!-- print(proc.time() - pt) -->
-<!-- ``` -->
+pt <- proc.time()
+for (i in 1:length(lambda_vals)) {
+  lambda <- lambda_vals[i]
+  obj <- loss + fused_lasso_2d(theta, lambda)
+  prob <- Problem(Minimize(obj))
+  res <- solve(prob)
+  theta_vals[[i]] <- res$getValue(theta)
+  obj_val[i] <- res$value
+}
+print(proc.time() - pt)
+```
 
-<!-- Presented below are plots of the original data and the fused fits, along with histograms of the fit values $\{\hat\theta_i\}$ -->
-<!-- ```{r, echo = F, fig.align = 'center', fig.height = 4, fig.width = 4} -->
-<!-- cols <- colorRampPalette(c("black", "white")) -->
-<!-- # flip so image() diplays the right orientation -->
-<!-- lenna2 <- t(apply(lenna, 2, rev)) -->
-<!-- theta_hat <- lapply(theta_vals, function(tv) t(apply(tv, 2, rev))) -->
+Presented below are plots of the original data and the fused fits
+```{r, echo = F, fig.align = 'center', fig.height = 4, fig.width = 4}
+cols <- colorRampPalette(c("black", "white"))
+# flip so image() diplays the right orientation
+lenna2 <- t(apply(lenna, 2, rev))
+theta_hat <- lapply(theta_vals, function(tv) t(apply(tv, 2, rev)))
 
-<!-- image(lenna2, col = cols(16), xaxt = 'n', yaxt = 'n', main = "Target") -->
-<!-- hist(lenna2, breaks = 1e2, xlim = c(0, 1), main = "Target", -->
-<!--      xlab = expression(hat(theta))) -->
-<!-- ``` -->
+image(lenna2, col = cols(16), xaxt = 'n', yaxt = 'n', main = "Target")
+hist(lenna2, breaks = 1e2, xlim = c(0, 1), main = "Target",
+     xlab = expression(hat(theta)))
+```
 
-<!-- ```{r, echo = F, fig.align = 'center', fig.height = 3.25, fig.width = 3, fig.show = 'hold'} -->
-<!-- for (k in 1:length(lambda_vals)) { -->
-<!--   image(theta_hat[[k]], col = cols(16), xaxt = 'n', yaxt = 'n', -->
-<!--         main = substitute(paste(lambda, " = ", lam), -->
-<!--                           list(lam = round(lambda_vals[k], 3)))) -->
-<!-- } -->
-<!-- ``` -->
+```{r, echo = F, fig.align = 'center', fig.height = 3.25, fig.width = 3, fig.show = 'hold'}
+for (k in 1:length(lambda_vals)) {
+  image(theta_hat[[k]], col = cols(16), xaxt = 'n', yaxt = 'n',
+        main = substitute(paste(lambda, " = ", lam),
+                          list(lam = round(lambda_vals[k], 3))))
+}
+```
 
-<!-- ```{r, echo = F, fig.show = 'hide'} -->
-<!-- # find largest count in histograms in order to standardize -->
-<!-- # the histograms to the same y axis -->
-<!-- ymax <- max(sapply(theta_hat, function(th) max(hist(th)$counts))) -->
-<!-- ``` -->
+along with histograms of the fit values $\{\hat\theta_i\}$
+```{r, echo = F, fig.show = 'hide'}
+# find largest count in histograms in order to standardize
+# the histograms to the same y axis
+ymax <- max(sapply(theta_hat, function(th) max(hist(th)$counts)))
+```
 
-<!-- ```{r, echo = F, fig.align = 'center', fig.height = 3, fig.width = 2.75, fig.show = 'hold'} -->
-<!-- for (k in 1:length(lambda_vals)) { -->
-<!--   hist(theta_hat[[k]], breaks = 1e2, xlim = c(0, 1), -->
-<!--        ylim = c(0, ymax), -->
-<!--        xlab = expression(hat(theta)), -->
-<!--        ylab = "", -->
-<!--        main = substitute(paste(lambda, " = ", lam), -->
-<!--                         list(lam = round(lambda_vals[k], 3)))) -->
-<!-- } -->
-<!-- ``` -->
+```{r, echo = F, fig.align = 'center', fig.height = 3, fig.width = 2.75, fig.show = 'hold'}
+for (k in 1:length(lambda_vals)) {
+  hist(theta_hat[[k]], breaks = 1e2, xlim = c(0, 1),
+       ylim = c(0, ymax),
+       xlab = expression(hat(theta)),
+       ylab = "",
+       main = substitute(paste(lambda, " = ", lam),
+                        list(lam = round(lambda_vals[k], 3))))
+}
+```
 
 Note that as $\lambda \to 0$ we find the distribution of $\hat\theta_i$ generally becomes less and less kurt. That is, when $\lambda$ is large we see nearly all the fits to be near the mean $\bar y$, and becoming more and more dispersed (towards $\hat\theta_i \to y_i$) as $\lambda$ shrinks.
 
-## (b)
+## 4.b
 
-### 1.
+### 4.b.1
 
 Note that our expression
 $$
@@ -407,7 +643,7 @@ $$
 
 as desired.
 
-### 2.
+### 4.b.2
 
 We now consider the expression
 $$
@@ -422,7 +658,7 @@ $$
 
 as desired.
 
-### 3.
+### 4.b.3
 
 We have the expression
 $$
@@ -446,7 +682,7 @@ $$
 
 as desired.
 
-### 4.
+### 4.b.3
 
 We begin with the problem
 $$
@@ -470,7 +706,7 @@ $$
 
 as desired.
 
-### 5.
+### 4.b.5
 
 Our expression
 $$
@@ -484,7 +720,7 @@ $$
 
 as desired.
 
-### 6.
+### 4.b.6
 
 We wish to translate the following into DCP interpretable format
 $$
@@ -503,7 +739,7 @@ $$
 
 as desired.
 
-### 7.
+### 4.b.7
 
 We begin by noting the string of equivalences of our target expression
 \begin{align*}
@@ -518,7 +754,7 @@ $$
 
 as desired.
 
-### 8.
+### 4.b.8
 
 We wish to translate the following inequality
 $$
@@ -531,6 +767,8 @@ $$
 $$
 
 as desired. 
+
+
 
 \newpage
 
